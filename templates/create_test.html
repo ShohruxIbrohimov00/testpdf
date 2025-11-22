@@ -16,7 +16,7 @@
 
 <main class="max-w-6xl mx-auto p-4 sm:p-6">
     
-    <!-- 1-bosqich: Test parametrlari (Yangi dizayn) -->
+    <!-- 1-bosqich: Test parametrlari + PDF yuklash -->
     <div id="create-step-1" class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 max-w-2xl mx-auto">
         <h2 class="text-2xl font-bold text-gray-900 text-center mb-8">Test parametrlari</h2>
 
@@ -24,13 +24,16 @@
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Imtihon nomi</label>
                 <input type="text" id="test-name" placeholder="Masalan: 1-variant biologiya"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Umumiy material (PDF yuklash)</label>
-                <input type="file" accept=".pdf" id="test-pdf"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-6 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Google Drive PDF Linki/ID</label>
+                <input type="text" id="test-pdf-link" placeholder="Faqat ID: 1BIVyEx_Z9IsGNKPuZoqupZ4VPhlZr0is yoki to'liq link"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                <p class="mt-2 text-sm text-gray-500">
+                    Google Drive'da faylni "Linkga ega bo'lgan har kim" uchun ochiq qilishni unutmang.
+                </p>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -44,39 +47,41 @@
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Savollar soni</label>
                     <input type="number" id="q-count" value="30" min="5" max="200"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
                 </div>
             </div>
 
-            <button onclick="nextStep()"
-                    class="w-full mt-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition">
+            <button onclick="uploadAndNext()" disabled id="next-btn"
+                    class="w-full mt-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition opacity-50 cursor-not-allowed">
                 Keyingi qadam (Javoblarni belgilash)
             </button>
         </div>
     </div>
 
+    <!-- 2-bosqich: Javob belgilash -->
     <div id="create-step-2" class="hidden flex-1 flex flex-col max-w-6xl mx-auto w-full">
-        
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1">
             
+            <!-- PDF Viewer (Google Drive Preview) -->
             <div class="pdf col-span-1 lg:col-span-2 bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-200 h-[60vh] lg:h-full">
-                <embed id="admin-pdf" class="w-full h-full pointer-events-auto" allowfullscreen>
+                <iframe id="admin-pdf" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
             </div>
             
+            <!-- Javob belgilash paneli (o'zgarmaydi) -->
             <div class="col-span-1 flex flex-col">
                 <div class="bg-white p-4 rounded-2xl shadow-2xl border border-gray-100 flex-shrink-0">
                     <div class="text-center font-extrabold text-2xl text-gray-800 mb-4">Savol <span id="admin-q" class="text-blue-600">1</span></div>
                     
                     <div class="flex justify-center space-x-3 mb-6" id="admin-tools">
-                        <div class="tool w-16 h-16 rounded-xl bg-blue-50 text-blue-600 border-4 border-blue-400 flex flex-col items-center justify-center text-xs sm:text-sm cursor-pointer hover:bg-blue-100 transition duration-150 shadow-md p-1" onclick="setType('single')" data-type="single" title="Bir tanlovli">
+                        <div class="tool w-16 h-16 rounded-xl bg-blue-50 text-blue-600 border-4 border-blue-400 flex flex-col items-center justify-center text-xs sm:text-sm cursor-pointer hover:bg-blue-100 transition duration-150 shadow-md p-1" onclick="setType('single')" data-type="single">
                             <i class="fa-regular fa-circle-check text-2xl"></i>
                             <span class="mt-1 font-semibold">Single</span>
                         </div>
-                        <div class="tool w-16 h-16 rounded-xl bg-white text-gray-600 border-4 border-gray-300 flex flex-col items-center justify-center text-xs sm:text-sm cursor-pointer hover:bg-gray-100 transition duration-150 shadow-md p-1" onclick="setType('multiple')" data-type="multiple" title="Ko'p tanlovli">
+                        <div class="tool w-16 h-16 rounded-xl bg-white text-gray-600 border-4 border-gray-300 flex flex-col items-center justify-center text-xs sm:text-sm cursor-pointer hover:bg-gray-100 transition duration-150 shadow-md p-1" onclick="setType('multiple')" data-type="multiple">
                             <i class="fa-regular fa-square-check text-2xl"></i>
                             <span class="mt-1 font-semibold">Multiple</span>
                         </div>
-                        <div class="tool w-16 h-16 rounded-xl bg-white text-gray-600 border-4 border-gray-300 flex flex-col items-center justify-center text-xs sm:text-sm cursor-pointer hover:bg-gray-100 transition duration-150 shadow-md p-1" onclick="setType('text')" data-type="text" title="Matnli javob">
+                        <div class="tool w-16 h-16 rounded-xl bg-white text-gray-600 border-4 border-gray-300 flex flex-col items-center justify-center text-xs sm:text-sm cursor-pointer hover:bg-gray-100 transition duration-150 shadow-md p-1" onclick="setType('text')" data-type="text">
                             <i class="fa-solid fa-pen-fancy text-2xl"></i>
                             <span class="mt-1 font-semibold">Text</span>
                         </div>
@@ -85,39 +90,30 @@
                     <div class="flex justify-center gap-3" id="admin-opts"></div>
                     
                     <div id="admin-textbox" class="hidden mt-4">
-                        <input type="text" id="admin-text" placeholder="To‘g‘ri javobni yozing..." class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-green-500 focus:border-green-500 transition text-gray-800 shadow-sm mb-3">
+                        <input type="text" id="admin-text" placeholder="To'g'ri javobni yozing..." class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-green-500 focus:border-green-500 transition text-gray-800 shadow-sm mb-3">
                         <button class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-md transition" onclick="saveTextAnswer()">
-                            <i class="fa-solid fa-check mr-2"></i> Saqlash
+                            Saqlash
                         </button>
                     </div>
                 </div>
 
                 <div class="nav bg-white p-4 mt-4 rounded-2xl shadow-2xl border border-gray-100 flex-shrink-0">
-                    
                     <div class="hidden lg:flex flex-col gap-3">
-                        <div class="flex-1 flex flex-wrap gap-2 lg:overflow-x-visible lg:max-h-72 lg:overflow-y-auto" id="admin-nav-desktop"> 
-                        </div>
-
+                        <div class="flex-1 flex flex-wrap gap-2 lg:overflow-x-visible lg:max-h-72 lg:overflow-y-auto" id="admin-nav-desktop"></div>
                         <button class="w-full px-5 py-2.5 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition shadow-lg" onclick="saveTest()">
-                            <i class="fa-solid fa-floppy-disk mr-1"></i> SAQLASH
+                            SAQLASH
                         </button>
                     </div>
 
                     <div class="flex lg:hidden">
-                        
                         <div class="flex space-x-2 pb-1 overflow-x-auto w-full items-center" id="admin-nav-mobile-wrapper">
-                            
-                            <div class="flex space-x-2 flex-shrink-0" id="admin-nav-mobile"> 
-                                </div>
-                            
+                            <div class="flex space-x-2 flex-shrink-0" id="admin-nav-mobile"></div>
                             <button class="px-5 py-2.5 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition flex-shrink-0 shadow-lg ml-4 mr-2" onclick="saveTest()">
-                                <i class="fa-solid fa-floppy-disk mr-1"></i> SAQLASH
+                                SAQLASH
                             </button>
                         </div>
-                        
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -129,22 +125,79 @@
     let currentTest = null;
     let currentQ = 1;
     let currentAnswerType = 'single'; 
-    
-    // ====================== STEP NAVIGATION & DATA INITIALIZATION ======================
+    let pdfPreviewLink = null;
 
-    function showStep(step) {
-        const step1 = document.getElementById('create-step-1');
-        const step2 = document.getElementById('create-step-2');
+    // Eski 'uploadAndNext' funksiyasini butunlay o'zgartiramiz
+    function uploadAndNext() {
+        const name = document.getElementById('test-name').value.trim();
+        const linkOrIdInput = document.getElementById('test-pdf-link').value.trim();
+        const qcount = parseInt(document.getElementById('q-count').value);
+        const acount = parseInt(document.getElementById('answers-count').value);
 
-        if (step === 1) {
-            step1.classList.remove('hidden');
-            step2.classList.add('hidden');
-            document.getElementById('create-header').textContent = 'Yangi Imtihon';
-        } else if (step === 2) {
-            step1.classList.add('hidden');
-            step2.classList.remove('hidden');
-            document.getElementById('create-header').textContent = 'To‘g‘ri javoblarni belgilang';
+        // Link/ID ni tekshirish va ID ni ajratib olish
+        let fileId = linkOrIdInput;
+        // Agar to'liq link kiritilgan bo'lsa, ID ni ajratib olamiz
+        const match = linkOrIdInput.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+            fileId = match[1];
         }
+
+        if (!name || !fileId || qcount < 5) {
+            Swal.fire('Xato', 'Barcha maydonlarni to\'ldiring va PDF ID/linkini kiriting!', 'warning');
+            return;
+        }
+
+        // PDF preview linkini hosil qilish
+        pdfPreviewLink = `https://drive.google.com/file/d/${fileId}/preview`;
+        
+        // Ma'lumotlarni saqlash
+        currentTest = {
+            name,
+            pdf_preview_link: pdfPreviewLink, // API chaqiruvisiz to'g'ridan-to'g'ri link yaratildi
+            questions: qcount,
+            variants: acount,
+            answers: {}
+        };
+
+        for (let i = 1; i <= qcount; i++) {
+            currentTest.answers[i] = { type: 'single', answer: null };
+        }
+
+        // iframe ga Google Drive preview ni yuklash
+        document.getElementById('admin-pdf').src = pdfPreviewLink;
+
+        // Navigatsiyani qurish va 2-bosqichga o'tish
+        buildNav('admin-nav-desktop', qcount, adminGoto);
+        buildNav('admin-nav-mobile', qcount, adminGoto);
+
+        showStep(2);
+        adminGoto(1);
+        
+        // Status xabarlarini o'chirib tashlaymiz, chunki yuklash yo'q
+        // statusEl.textContent = 'PDF linki qabul qilindi.';
+        // progressEl.style.width = '100%'; 
+    }
+
+    // PDF file input o'zgarganda tugmani faollashtiradigan qism endi kerak emas, o'rniga oddiy inputni tekshiramiz
+    document.getElementById('test-pdf-link').addEventListener('input', function() {
+        const hasValue = this.value.trim().length > 0;
+        const btn = document.getElementById('next-btn');
+        // Faqat ID kiritilgan bo'lsa faollashtirish
+        if (hasValue && document.getElementById('test-name').value.trim()) {
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            btn.classList.add('hover:bg-blue-700');
+        } else {
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            btn.classList.remove('hover:bg-blue-700');
+        }
+    });
+    
+    function showStep(step) {
+        document.getElementById('create-step-1').classList.toggle('hidden', step !== 1);
+        document.getElementById('create-step-2').classList.toggle('hidden', step !== 2);
+        document.getElementById('create-header').textContent = step === 1 ? 'Yangi Imtihon' : 'To‘g‘ri javoblarni belgilang';
     }
     
     function nextStep() {
@@ -390,67 +443,42 @@
         Swal.fire('Saqlandi', 'Textli javob saqlandi.', 'success');
     }
 
-    // ====================== FINAL SAVE TO BACKEND (o'zgarishsiz) ======================
-
     async function saveTest() {
-        // 1. Javoblarni to'liq tekshirish
         for (let i = 1; i <= currentTest.questions; i++) {
-             const answerData = currentTest.answers[i];
-             let isAnswered = false;
-
-             if (answerData && answerData.answer) {
-                 const answer = answerData.answer;
-                 // Javob satr yoki elementlari bor massiv bo'lsa, "javob berilgan" hisoblanadi
-                 if (Array.isArray(answer) && answer.length > 0) isAnswered = true;
-                 if (typeof answer === 'string' && answer.length > 0) isAnswered = true;
-             }
-            
-             if (!isAnswered) {
-                 Swal.fire('Diqqat!', `№${i} savolning javobi belgilanmagan.`, 'warning');
-                 adminGoto(i);
-                 return;
-             }
+            const ans = currentTest.answers[i].answer;
+            if (!ans || (Array.isArray(ans) && ans.length === 0) || (typeof ans === 'string' && ans.trim() === '')) {
+                Swal.fire('Diqqat!', `№${i} savol javobi belgilanmagan`, 'warning');
+                adminGoto(i);
+                return;
+            }
         }
-        
-        // 2. Payload ni yaratish
-        const testPayload = {
+
+        const payload = {
             name: currentTest.name,
             questions: currentTest.questions,
             variants: currentTest.variants,
-            pdf_base64: currentTest.pdf, 
-            // JSON formatida saqlash uchun lug'atni string formatiga o'tkazish
-            answers: JSON.stringify(currentTest.answers) 
+            pdf_preview_link: currentTest.pdf_preview_link,  // Faqat link
+            answers: JSON.stringify(currentTest.answers)
         };
 
-        // 3. Backendga yuborish
-        try {
-            Swal.fire({
-                title: 'Test yaratilmoqda...',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading()
-                }
-            });
-            
-            const response = await fetch('/api/test/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(testPayload)
-            });
+        Swal.fire({ title: 'Saqlanmoqda...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-            const result = await response.json();
-            Swal.close();
+        const resp = await fetch('/api/test/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
 
-            if (response.ok) {
-                // Yangi token bilan 'test-created' sahifasiga yo'naltirish
-                window.location.href = `/test-created?name=${currentTest.name}&code=${result.test_code}&id=${result.test_id}&site_token=${result.site_token}`;
-            } else {
-                Swal.fire('Server Xatosi', result.message || 'Testni saqlashda kutilmagan xato yuz berdi.', 'error');
-            }
-        } catch(error) {
-            console.error('Saqlash xatosi:', error);
-            Swal.fire('Ulanish Xatosi', 'Backendga ulanib bo‘lmadi. Server ishlayotganiga ishonch hosil qiling.', 'error');
+        const result = await resp.json();
+        Swal.close();
+
+        if (resp.ok) {
+            window.location.href = `/test-created?name=${encodeURIComponent(currentTest.name)}&code=${result.test_code}&id=${result.test_id}&site_token=${result.site_token}`;
+        } else {
+            Swal.fire('Xato', result.message || 'Saqlashda xato', 'error');
         }
     }
+
+
 </script>
 {% endblock %}

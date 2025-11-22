@@ -6,15 +6,15 @@ from sqlalchemy import exc
 from datetime import datetime
 # 🔥 YANGI IMPORTLAR
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
+from itsdangerous import URLSafeTimedSerializer
 
-# Flask ilovasini sozlash
+
 app = Flask(__name__)
-
-# 🔥 XAVFSIZLIK UCHUN ENG MUHIM QADAM: SECRET KEY
-app.config['SECRET_KEY'] = 'sizning_juda_maxfiy_va_noyob_kalitingiz_bu_harf_raqam_aralashmasi_bolsin' 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db' 
+app.config['SECRET_KEY'] = 'sizning_juda_maxfiy_va_noyob_kalitingiz_bu_yerda' 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
 ADMIN_USERNAME = "AdminTest"
 ADMIN_PASSWORD = "Salom1234" 
 # ==========================================================
@@ -54,10 +54,9 @@ class Test(db.Model):
     questions_count = db.Column(db.Integer, nullable=False)
     variants_count = db.Column(db.Integer, nullable=False)
     
-    # PDF base64 ma'lumotlari.
-    pdf_base64 = db.Column(db.Text, nullable=True) 
-    answers_json = db.Column(db.Text, nullable=True) # To'g'ri javoblar
-    results_json = db.Column(db.Text, nullable=True) # Talaba natijalari
+    pdf_drive_link = db.Column(db.Text, nullable=True) 
+    answers_json = db.Column(db.Text, nullable=True)
+    results_json = db.Column(db.Text, nullable=True)
 
     def to_dict(self):
         return {
@@ -68,8 +67,9 @@ class Test(db.Model):
             'variants': self.variants_count,
             'answers': json.loads(self.answers_json) if self.answers_json else {},
             'results': json.loads(self.results_json) if self.results_json else [],
-            'pdf': self.pdf_base64 
+            'pdf_link': self.pdf_drive_link  
         }
+
 class StudentSession(db.Model):
     __tablename__ = 'student_sessions'
     id = db.Column(db.Integer, primary_key=True)
@@ -87,6 +87,8 @@ class StudentSession(db.Model):
 # ==========================================================
 # QO'SHIMCHA YORDAMCHI FUNKSIYALAR
 # ==========================================================
+
+
 
 def get_flat_correct_answers(answers_json):
     """answers_json dan faqat javob qiymatini ajratib oladi."""
@@ -123,13 +125,12 @@ def get_question_types(answers_json):
 # API ENDPOINTLAR
 # ==========================================================
 
-# Test yaratish (Token yaratish qo'shildi)
 @app.route('/api/test/create', methods=['POST'])
 def create_test():
     try:
         data = request.get_json()
+        pdf_preview_link = data.get('pdf_preview_link') 
         
-        # Noyob kod yaratish
         while True:
             new_code = str(random.randint(100000, 999999))
             if not Test.query.filter_by(code=new_code).first():
@@ -140,28 +141,41 @@ def create_test():
             code=new_code,
             questions_count=data.get('questions'),
             variants_count=data.get('variants'),
-            pdf_base64=data.get('pdf_base64'), 
+            pdf_drive_link=pdf_preview_link,   
             answers_json=data.get('answers')
         )
         
         db.session.add(new_test)
         db.session.commit()
         
-        # 🔥 YANGILASH: Noyob tokenni yaratish
         site_token = generate_test_token(new_test.id, new_code)
         
         return jsonify({
             'status': 'success',
             'test_id': new_test.id,
             'test_code': new_code,
-            'site_token': site_token, # Sayt linki uchun noyob token qaytariladi
-            'message': 'Test muvaffaqiyatli saqlandi!'
+            'site_token': site_token,
+            'message': 'Test muvaffaqiyatli yaratildi!'
         }), 201
-    except exc.SQLAlchemyError as e:
-        db.session.rollback()
-        return jsonify({'status': 'error', 'message': f'Baza xatosi: {str(e)}'}), 500
+        
     except Exception as e:
-        return jsonify({'status': 'error', 'message': f'Kutilmagan xato: {str(e)}'}), 500
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+#Test ma'lumotlarini olishda pdf_link qaytaramiz
+@app.route('/api/test/get_by_code/<code>', methods=['GET'])
+def get_test_by_code(code):
+    test = Test.query.filter_by(code=code).first()
+    if test:
+        data = test.to_dict()
+        question_types = get_question_types(test.answers_json)
+        
+        del data['answers']
+        del data['results']
+        
+        data['question_types'] = question_types
+        return jsonify(data), 200
+    return jsonify({'status': 'error', 'message': 'Kod topilmadi.'}), 404
 
 # Admin panel uchun testlar ro'yxatini yuklash (o'zgarishsiz)
 @app.route('/api/tests/load', methods=['GET'])
@@ -186,25 +200,6 @@ def load_all_tests():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Kod bo'yicha test ma'lumotlarini yuklash (o'zgarishsiz)
-@app.route('/api/test/get_by_code/<code>', methods=['GET'])
-def get_test_by_code(code):
-    try:
-        test = Test.query.filter_by(code=code).first()
-        if test:
-            data = test.to_dict()
-            
-            question_types = get_question_types(test.answers_json)
-            
-            del data['answers'] 
-            del data['results'] 
-            
-            data['question_types'] = question_types 
-            
-            return jsonify(data), 200
-        return jsonify({'status': 'error', 'message': 'Kod topilmadi.'}), 404
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': f'Yuklash xatosi: {str(e)}'}), 500
 
 # ID bo'yicha test ma'lumotlarini yuklash (o'zgarishsiz)
 @app.route('/api/test/get_by_id/<int:test_id>', methods=['GET'])
