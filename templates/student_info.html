@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Testni Boshlash{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-center">
+            <h1 class="text-xl font-bold text-gray-800">Testni Boshlash</h1>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-4 sm:p-6 flex-1 flex items-center justify-center">
+
+        <!-- Asosiy karta -->
+        <div class="w-full max-w-md bg-white rounded-lg shadow-sm border border-gray-200 p-8 sm:p-10">
+
+            <!-- Sarlavha -->
+            <div class="text-center mb-10">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-100 text-blue-600 mb-6">
+                    <i class="fa-solid fa-user-graduate text-4xl"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-gray-900">Xush Kelibsiz!</h2>
+                <p class="text-lg text-gray-600 mt-2">Testni boshlash uchun ismingizni kiriting</p>
+            </div>
+
+            <!-- Forma -->
+            <div class="space-y-8">
+
+                <div>
+                    <label for="student-name" class="block text-sm font-semibold text-gray-700 mb-3">
+                        Ism va familiyangiz
+                    </label>
+                    <input type="text" id="student-name" 
+                           placeholder="Masalan: Aliyeva Madina"
+                           class="w-full px-5 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-lg"
+                           autocomplete="name">
+                </div>
+
+                <button id="save-and-start"
+                        class="w-full bg-blue-600 text-white font-bold py-4 px-6 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ease-in-out">
+                    <i class="fa-solid fa-play"></i>
+                    Testni boshlash
+                </button>
+            </div>
+
+            <!-- Yuklanmoqda -->
+            <div id="loading" class="hidden mt-8 text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
+                    <i class="fa-solid fa-spinner fa-spin text-blue-600 text-3xl"></i>
+                </div>
+                <p class="text-gray-600 font-medium">Ma'lumotlar saqlanmoqda...</p>
+            </div>
+
+            <!-- Eslatma -->
+            <div class="mt-10 p-5 bg-gray-50 border border-gray-200 rounded-lg">
+                <p class="text-sm text-gray-600 text-center flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-circle-info text-blue-600"></i>
+                    Ismingizni to‘g‘ri kiriting — natijalar shu nom bilan saqlanadi
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-6 text-center text-xs text-gray-500 border-t border-gray-200 bg-white">
+        © 2025 Imtihon Tizimi. Barcha huquqlar himoyalangan.
+    </footer>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const testId = urlParams.get('test_id') || urlParams.get('token'); // token ham qo'llab-quvvatlanadi
+
+    document.getElementById('save-and-start').addEventListener('click', async () => {
+        const nameInput = document.getElementById('student-name');
+        const name = nameInput.value.trim();
+        const btn = document.getElementById('save-and-start');
+        const loading = document.getElementById('loading');
+
+        if (name.length < 3) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Ism kiritilmagan',
+                text: 'Iltimos, to‘liq ism va familiyangizni kiriting',
+                confirmButtonText: 'Tushunarli'
+            });
+            nameInput.focus();
+            return;
+        }
+
+        btn.disabled = true;
+        loading.classList.remove('hidden');
+
+        try {
+            const res = await fetch('/api/student/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    test_id: testId,
+                    name: name
+                })
+            });
+
+            const data = await res.json();
+
+            if (data.status === 'success') {
+                // Muvaffaqiyatli — testga o'tish
+                window.location.href = `/test/${testId}?user_id=${data.user_id}`;
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Xato yuz berdi',
+                    text: data.message || 'Maʼlumot saqlanmadi. Qayta urinib ko‘ring.',
+                    confirmButtonText: 'Yopish'
+                });
+                btn.disabled = false;
+                loading.classList.add('hidden');
+            }
+        } catch (err) {
+            console.error('Internet xatosi:', err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Ulanish xatosi',
+                text: 'Internet aloqangizni tekshiring va qayta urinib ko‘ring.',
+                confirmButtonText: 'Tushunarli'
+            });
+            btn.disabled = false;
+            loading.classList.add('hidden');
+        }
+    });
+
+    // Enter tugmasi bilan ham ishlasin
+    document.getElementById('student-name').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            document.getElementById('save-and-start').click();
+        }
+    });
+</script>
+{% endblock %}

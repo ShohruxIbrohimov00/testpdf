@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Natijangiz{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <a href="/" class="text-gray-700 hover:text-gray-900 transition">
+                <i class="fa-solid fa-arrow-left text-2xl"></i>
+            </a>
+            <h1 class="text-xl font-bold text-gray-800">
+                Test Natijangiz
+            </h1>
+            <div class="w-10"></div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-4 sm:p-6">
+
+        <!-- Yuklanish -->
+        <div id="loading" class="text-center py-20">
+            <i class="fa-solid fa-spinner fa-spin text-4xl text-gray-500 mb-4"></i>
+            <p class="text-gray-600">Natijalar yuklanmoqda...</p>
+        </div>
+
+        <!-- Asosiy kontent -->
+        <div id="result-content" class="hidden space-y-8">
+
+            <!-- 2 ta kartochka: kompyuterda yonma-yon, telefonda tagma-tag -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                <!-- 1. Umumiy natija kartasi -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                    <div class="text-center">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2" id="student-name">Ismsiz talaba</h2>
+                        <p class="text-lg text-gray-600" id="test-name">Test nomi</p>
+
+                        <!-- Katta doira bilan foiz -->
+                        <div class="mt-8 inline-flex items-center justify-center w-48 h-48 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 shadow-xl">
+                            <span class="text-6xl font-black text-white" id="percentage">0%</span>
+                        </div>
+
+                        <!-- To'g'ri / Xato / Jami -->
+                        <div class="grid grid-cols-3 gap-6 mt-10">
+                            <div class="text-center">
+                                <p class="text-4xl font-bold text-green-600" id="correct-count">0</p>
+                                <p class="text-sm text-gray-600 mt-1 font-medium">Toʻgʻri</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-4xl font-bold text-red-600" id="wrong-count">0</p>
+                                <p class="text-sm text-gray-600 mt-1 font-medium">Xato</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-4xl font-bold text-blue-600" id="total-questions">0</p>
+                                <p class="text-sm text-gray-600 mt-1 font-medium">Jami savol</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Savollar boʻyicha tahlil -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div class="bg-gray-100 px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-bold text-gray-800">Savollar boʻyicha tahlil</h3>
+                    </div>
+                    <div id="questions-list" class="p-6 max-h-96 overflow-y-auto space-y-4">
+                        <!-- JS bilan toʻldiriladi -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tugmalar (har doim pastda) -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center pt-6">
+                <button onclick="copyResultLink()" 
+                        class="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition transform hover:scale-105">
+                    <i class="fa-solid fa-share-nodes mr-2"></i>
+                    Natijani ulashish
+                </button>
+                <a href="/" 
+                   class="px-8 py-4 bg-gray-600 hover:bg-gray-700 text-white font-bold rounded-lg shadow-md transition text-center">
+                    <i class="fa-solid fa-house mr-2"></i>
+                    Bosh sahifa
+                </a>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const testId = {{ test_id }};
+    const userId = "{{ user_id|safe }}";
+
+    function formatAnswer(ans) {
+        if (!ans) return '<span class="text-red-600 font-medium">Javob berilmagan</span>';
+        if (Array.isArray(ans)) return ans.length === 0 ? '<span class="text-red-600">Javob yoʻq</span>' : ans.join(', ');
+        return ans;
+    }
+
+    async function loadResult() {
+        try {
+            const res = await fetch(`/api/result/single/${testId}/${userId}`);
+            if (!res.ok) throw new Error("Natija yuklanmadi");
+
+            const data = await res.json();
+
+            // Umumiy natija
+            document.getElementById('student-name').textContent = data.result.name || 'Ismi kiritilmagan';
+            document.getElementById('test-name').textContent = data.test_info.name;
+            document.getElementById('percentage').textContent = data.result.percentage + '%';
+            document.getElementById('correct-count').textContent = data.result.correct;
+            document.getElementById('wrong-count').textContent = data.result.wrong;
+            document.getElementById('total-questions').textContent = data.test_info.questions;
+
+            // Savollar tahlili
+            const list = document.getElementById('questions-list');
+            list.innerHTML = '';
+
+            for (let i = 1; i <= data.test_info.questions; i++) {
+                const qNum = i.toString();
+                const correctAns = data.correct_answers[qNum];
+                const studentAns = data.result.answers[qNum];
+                const qType = data.question_types[qNum] || 'single';
+
+                const isCorrect = (() => {
+                    if (qType === 'text') {
+                        return String(studentAns || '').trim().toLowerCase() === String(correctAns || '').trim().toLowerCase();
+                    }
+                    if (qType === 'multiple') {
+                        const s = Array.isArray(studentAns) ? [...studentAns].sort() : [];
+                        const c = Array.isArray(correctAns) ? [...correctAns].sort() : [];
+                        return JSON.stringify(s) === JSON.stringify(c);
+                    }
+                    return String(studentAns) === String(correctAns);
+                })();
+
+                const card = document.createElement('div');
+                card.className = `p-5 rounded-lg border-l-8 ${isCorrect ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'}`;
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <p class="font-bold text-gray-900">${i}-savol</p>
+                            <p class="text-sm text-gray-600 mt-2">
+                                Sizning javobingiz: <span class="font-medium">${formatAnswer(studentAns)}</span>
+                            </p>
+                            ${!isCorrect ? `
+                            <p class="text-sm text-green-700 mt-1">
+                                Toʻgʻri javob: <span class="font-bold">${formatAnswer(correctAns)}</span>
+                            </p>` : ''}
+                        </div>
+                        <div class="ml-4 text-1xl">
+                            ${isCorrect ? "to'gri" : "Noto'gri"}
+                        </div>
+                    </div>
+                `;
+                list.appendChild(card);
+            }
+
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('result-content').classList.remove('hidden');
+
+        } catch (err) {
+            document.getElementById('loading').innerHTML = `
+                <div class="text-center">
+                    <p class="text-red-600 text-xl font-medium">Xatolik yuz berdi</p>
+                    <p class="text-gray-600 mt-2">${err.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    function copyResultLink() {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            Swal.fire('Muvaffaqiyat!', 'Natija linki nusxalandi', 'success');
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadResult);
+</script>
+{% endblock %}

@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+
+{% block title %}Test Yaratish{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a href="{{ url_for('admin_dash') }}" class="text-gray-700 hover:text-gray-900 transition">
+            <i class="fa-solid fa-arrow-left text-2xl"></i>
+        </a>
+        <h1 class="text-xl font-bold text-gray-800" id="create-header">Yangi Imtihon</h1>
+        <div class="w-10"></div>
+    </div>
+</header>
+
+<main class="max-w-6xl mx-auto p-4 sm:p-6">
+    
+    <!-- 1-bosqich: Test parametrlari (Yangi dizayn) -->
+    <div id="create-step-1" class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 max-w-2xl mx-auto">
+        <h2 class="text-2xl font-bold text-gray-900 text-center mb-8">Test parametrlari</h2>
+
+        <div class="space-y-6">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Imtihon nomi</label>
+                <input type="text" id="test-name" placeholder="Masalan: 1-variant biologiya"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Umumiy material (PDF yuklash)</label>
+                <input type="file" accept=".pdf" id="test-pdf"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-6 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Javob variantlari</label>
+                    <select id="answers-count" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                        <option value="4">4 ta (A-D)</option>
+                        <option value="5" selected>5 ta (A-E)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Savollar soni</label>
+                    <input type="number" id="q-count" value="30" min="5" max="200"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                </div>
+            </div>
+
+            <button onclick="nextStep()"
+                    class="w-full mt-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition">
+                Keyingi qadam (Javoblarni belgilash)
+            </button>
+        </div>
+    </div>
+
+    <div id="create-step-2" class="hidden flex-1 flex flex-col max-w-6xl mx-auto w-full">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1">
+            
+            <div class="pdf col-span-1 lg:col-span-2 bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-200 h-[60vh] lg:h-full">
+                <embed id="admin-pdf" class="w-full h-full pointer-events-auto" allowfullscreen>
+            </div>
+            
+            <div class="col-span-1 flex flex-col">
+                <div class="bg-white p-4 rounded-2xl shadow-2xl border border-gray-100 flex-shrink-0">
+                    <div class="text-center font-extrabold text-2xl text-gray-800 mb-4">Savol <span id="admin-q" class="text-blue-600">1</span></div>
+                    
+                    <div class="flex justify-center space-x-3 mb-6" id="admin-tools">
+                        <div class="tool w-16 h-16 rounded-xl bg-blue-50 text-blue-600 border-4 border-blue-400 flex flex-col items-center justify-center text-xs sm:text-sm cursor-pointer hover:bg-blue-100 transition duration-150 shadow-md p-1" onclick="setType('single')" data-type="single" title="Bir tanlovli">
+                            <i class="fa-regular fa-circle-check text-2xl"></i>
+                            <span class="mt-1 font-semibold">Single</span>
+                        </div>
+                        <div class="tool w-16 h-16 rounded-xl bg-white text-gray-600 border-4 border-gray-300 flex flex-col items-center justify-center text-xs sm:text-sm cursor-pointer hover:bg-gray-100 transition duration-150 shadow-md p-1" onclick="setType('multiple')" data-type="multiple" title="Ko'p tanlovli">
+                            <i class="fa-regular fa-square-check text-2xl"></i>
+                            <span class="mt-1 font-semibold">Multiple</span>
+                        </div>
+                        <div class="tool w-16 h-16 rounded-xl bg-white text-gray-600 border-4 border-gray-300 flex flex-col items-center justify-center text-xs sm:text-sm cursor-pointer hover:bg-gray-100 transition duration-150 shadow-md p-1" onclick="setType('text')" data-type="text" title="Matnli javob">
+                            <i class="fa-solid fa-pen-fancy text-2xl"></i>
+                            <span class="mt-1 font-semibold">Text</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center gap-3" id="admin-opts"></div>
+                    
+                    <div id="admin-textbox" class="hidden mt-4">
+                        <input type="text" id="admin-text" placeholder="To‘g‘ri javobni yozing..." class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-green-500 focus:border-green-500 transition text-gray-800 shadow-sm mb-3">
+                        <button class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-md transition" onclick="saveTextAnswer()">
+                            <i class="fa-solid fa-check mr-2"></i> Saqlash
+                        </button>
+                    </div>
+                </div>
+
+                <div class="nav bg-white p-4 mt-4 rounded-2xl shadow-2xl border border-gray-100 flex-shrink-0">
+                    
+                    <div class="hidden lg:flex flex-col gap-3">
+                        <div class="flex-1 flex flex-wrap gap-2 lg:overflow-x-visible lg:max-h-72 lg:overflow-y-auto" id="admin-nav-desktop"> 
+                        </div>
+
+                        <button class="w-full px-5 py-2.5 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition shadow-lg" onclick="saveTest()">
+                            <i class="fa-solid fa-floppy-disk mr-1"></i> SAQLASH
+                        </button>
+                    </div>
+
+                    <div class="flex lg:hidden">
+                        
+                        <div class="flex space-x-2 pb-1 overflow-x-auto w-full items-center" id="admin-nav-mobile-wrapper">
+                            
+                            <div class="flex space-x-2 flex-shrink-0" id="admin-nav-mobile"> 
+                                </div>
+                            
+                            <button class="px-5 py-2.5 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition flex-shrink-0 shadow-lg ml-4 mr-2" onclick="saveTest()">
+                                <i class="fa-solid fa-floppy-disk mr-1"></i> SAQLASH
+                            </button>
+                        </div>
+                        
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentTest = null;
+    let currentQ = 1;
+    let currentAnswerType = 'single'; 
+    
+    // ====================== STEP NAVIGATION & DATA INITIALIZATION ======================
+
+    function showStep(step) {
+        const step1 = document.getElementById('create-step-1');
+        const step2 = document.getElementById('create-step-2');
+
+        if (step === 1) {
+            step1.classList.remove('hidden');
+            step2.classList.add('hidden');
+            document.getElementById('create-header').textContent = 'Yangi Imtihon';
+        } else if (step === 2) {
+            step1.classList.add('hidden');
+            step2.classList.remove('hidden');
+            document.getElementById('create-header').textContent = 'To‘g‘ri javoblarni belgilang';
+        }
+    }
+    
+    function nextStep() {
+        const name = document.getElementById('test-name').value.trim();
+        const fileInput = document.getElementById('test-pdf');
+        const file = fileInput.files[0];
+        const qcount = parseInt(document.getElementById('q-count').value);
+        const acount = parseInt(document.getElementById('answers-count').value);
+        
+        // 🔥 Bu yerda chaqirishga hojat yo'q, chunki ma'lumotlar faqat reader.onload ichida mavjud
+        // buildNav('admin-nav-desktop', qcount, adminGoto); 
+        // buildNav('admin-nav-mobile', qcount, adminGoto);
+
+        if (!name || !file || qcount < 2) {
+            Swal.fire('Xato', 'Barcha maydonlarni to‘ldiring va PDF yuklang', 'warning');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = e => {
+            currentTest = {
+                name, 
+                pdf: e.target.result, 
+                questions: qcount, 
+                variants: acount,
+                answers: {} 
+            };
+            
+            for (let i = 1; i <= qcount; i++) {
+                currentTest.answers[i] = { type: 'single', answer: null }; 
+            }
+
+            document.getElementById('admin-pdf').src = currentTest.pdf;
+            
+            // 🔥 Noto'g'ri chaqiruvni to'g'ri ID'lar bilan almashtirish (Yangi ID'lar)
+            buildNav('admin-nav-desktop', qcount, adminGoto);
+            buildNav('admin-nav-mobile', qcount, adminGoto);
+            
+            showStep(2);
+            adminGoto(1);
+        };
+        reader.readAsDataURL(file);
+    }
+    
+
+    // 🔥 setType funksiyasi faqat logikani o'zgartiradi va keyin adminGoto() chaqiradi.
+    function setType(t) {
+        if (t !== currentTest.answers[currentQ].type) {
+            // Agar tur o'zgarsa, oldingi javobni tozalash
+            currentTest.answers[currentQ].answer = (t === 'text' ? '' : null);
+        }
+        
+        currentTest.answers[currentQ].type = t; 
+        currentAnswerType = t; 
+        
+        // adminGoto() hamma narsani qayta render qiladi va aktiv tugmalarni to'g'ri belgilaydi
+        adminGoto(currentQ); 
+    }
+
+    function buildNav(id, count, fn) {
+        const nav = document.getElementById(id); nav.innerHTML = '';
+        for (let i = 1; i <= count; i++) {
+            const b = document.createElement('div'); 
+            b.className = 'n w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-300 transition flex-shrink-0';
+            b.textContent = i; 
+            b.onclick = () => fn(i); 
+            nav.appendChild(b);
+            
+            if (currentTest && currentTest.answers) {
+                updateNavButton(i); 
+            }
+        }
+    }
+
+    function adminGoto(n) {
+        const oldQ = currentQ; // oldingi savol raqami
+        currentQ = n; // yangi savol raqamini o'rnatish
+        
+        // 🔥 Navigatsiya tugmalarini yangilash. Barcha tugmalarning holatini
+        // (tanlangan, javob berilgan) to'g'ri ko'rsatish uchun loopdan foydalanamiz.
+        for (let i = 1; i <= currentTest.questions; i++) {
+            // updateNavButton(i) funksiyasi ichida ikkala ID (desktop va mobile) tekshiriladi
+            updateNavButton(i); 
+        }
+
+        // ----------------------------------------------------
+        // Qolgan qism deyarli siz berganingizdek qoldi
+        // ----------------------------------------------------
+        
+        document.getElementById('admin-q').textContent = n;
+        
+        const opts = document.getElementById('admin-opts'); opts.innerHTML = '';
+        const currentAnswerData = currentTest.answers[n]; 
+        const currentAnswer = currentAnswerData ? currentAnswerData.answer : null;
+        
+        const typeToSet = currentAnswerData ? currentAnswerData.type : 'single';
+        currentAnswerType = typeToSet;
+
+        // Tool tugmachalarini to'g'ri ranglash
+        document.querySelectorAll('.tool').forEach(el => {
+            el.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-400', 'bg-white', 'text-gray-600', 'border-gray-300'); 
+            if (el.dataset.type === typeToSet) {
+                el.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-400');
+            } else {
+                el.classList.add('bg-white', 'text-gray-600', 'border-gray-300');
+            }
+        });
+
+
+        document.getElementById('admin-textbox').classList.add('hidden');
+        opts.classList.remove('hidden');
+
+        if (currentAnswerType === 'text') {
+            opts.classList.add('hidden');
+            document.getElementById('admin-textbox').classList.remove('hidden');
+            document.getElementById('admin-text').value = currentAnswer || '';
+        } else {
+            document.getElementById('admin-text').value = '';
+            
+            const isMultiple = currentAnswerType === 'multiple';
+
+            'ABCDE'.slice(0, currentTest.variants).split('').forEach(l => {
+                const d = document.createElement('div');
+                const isSquare = isMultiple;
+                
+                // Variant tugmasi dizayni
+                d.className = `o w-12 h-12 border-4 border-gray-300 bg-white flex items-center justify-center font-black text-xl cursor-pointer transition duration-150 hover:border-blue-500 shadow-md ${isSquare ? 'rounded-xl' : 'rounded-full'}`;
+                d.textContent = l;
+                
+                d.onclick = () => { 
+                    const isCurrentlyActive = d.classList.contains('active');
+                    
+                    if (!isSquare) {
+                        opts.querySelectorAll('.o').forEach(x => {
+                            x.classList.remove('active', 'bg-blue-600', 'text-white', 'border-blue-600');
+                            x.classList.add('bg-white', 'text-gray-800', 'border-gray-300');
+                        }); 
+                    }
+                    
+                    if (!isCurrentlyActive || isSquare) {
+                        d.classList.add('active', 'bg-blue-600', 'text-white', 'border-blue-600');
+                        d.classList.remove('bg-white', 'text-gray-800', 'border-gray-300');
+                    } else if (!isSquare) {
+                        d.classList.remove('active', 'bg-blue-600', 'text-white', 'border-blue-600');
+                        d.classList.add('bg-white', 'text-gray-800', 'border-gray-300');
+                    }
+                    
+                    saveAdmin(n); 
+                };
+
+                let isActive = false;
+                if (currentAnswer) {
+                    if (isMultiple && Array.isArray(currentAnswer) && currentAnswer.includes(l)) isActive = true;
+                    if (!isMultiple && currentAnswer === l) isActive = true;
+                }
+                
+                if (isActive) {
+                    d.classList.add('active', 'bg-blue-600', 'text-white', 'border-blue-600');
+                    d.classList.remove('bg-white', 'border-gray-300', 'text-gray-800');
+                } else {
+                    d.classList.add('bg-white', 'border-gray-300', 'text-gray-800');
+                }
+                
+                opts.appendChild(d);
+            });
+        }
+    }
+
+    function updateNavButton(n) {
+        // 1. Ikkala navigatsiya panelidagi tegishli tugmalarni topish
+        const navButtonDesktop = document.querySelectorAll('#admin-nav-desktop .n')[n - 1];
+        const navButtonMobile = document.querySelectorAll('#admin-nav-mobile .n')[n - 1];
+        
+        const allNavButtons = [navButtonDesktop, navButtonMobile].filter(Boolean);
+
+        // 2. Javob berilganligini tekshirish
+        const answerData = currentTest.answers[n];
+        let answered = false;
+        
+        if (answerData && answerData.answer) {
+            const answer = answerData.answer;
+            if (Array.isArray(answer) && answer.length > 0) answered = true; 
+            if (typeof answer === 'string' && answer.length > 0) answered = true; 
+        }
+        
+        // 3. Ikkala tugmaning ham klasslarini yangilash
+        allNavButtons.forEach(navButton => {
+            // 🔥 A. To'liq Tozalash: Barcha rang, matn rang va chegara klasslarini olib tashlash
+            navButton.classList.remove('bg-blue-600', 'bg-gray-200', 'text-white', 'text-gray-700', 
+                                    'border-blue-600', 'border-gray-200', 'border-4');
+            navButton.style.border = ''; // Inline styllarni ham tozalash
+
+            // B. Default/Javob Berilgan ranglarni belgilash
+            if (answered) {
+                // Javob bor: Foni ko'k
+                navButton.classList.add('bg-blue-600', 'text-white');
+            } else {
+                // Javob yo'q: Foni kulrang
+                navButton.classList.add('bg-gray-200', 'text-gray-700');
+            }
+            
+            // C. 🔥 JORIY TANLANGAN holat (Eng ustun qism)
+            if (n === currentQ) {
+                // Chegarani mustaqil berish
+                navButton.classList.add('border-4', 'border-blue-600');
+                
+                // Foni tanlovga ko'ra qoladi (answered = true bo'lsa bg-blue, aks holda bg-gray-200)
+            }
+            
+            // 4. Mobil Navigatsiya Scroll
+            if (navButton.parentElement.id === 'admin-nav-mobile' && window.innerWidth < 1024) { 
+                const navContainer = document.getElementById('admin-nav-mobile-wrapper');
+                const currentNavButton = navButton; 
+            
+            }
+        });
+    }
+
+    function saveAdmin(n) {
+        if (currentAnswerType === 'text') return;
+        const selElements = document.querySelectorAll('#admin-opts .o.active');
+        const sel = [...selElements].map(x => x.textContent);
+        
+        const answer = currentAnswerType === 'single' ? (sel.length ? sel[0] : null) : sel;
+        
+        currentTest.answers[n].answer = answer;
+        
+        updateNavButton(n);
+    }
+
+    function saveTextAnswer() {
+        const val = document.getElementById('admin-text').value.trim();
+        const n = currentQ;
+        
+        if (val.length === 0) {
+             Swal.fire('Xato', 'Iltimos, matnli javobni kiriting.', 'warning');
+             return;
+        }
+
+        currentTest.answers[n].answer = val;
+        
+        updateNavButton(n);
+        Swal.fire('Saqlandi', 'Textli javob saqlandi.', 'success');
+    }
+
+    // ====================== FINAL SAVE TO BACKEND (o'zgarishsiz) ======================
+
+    async function saveTest() {
+        // 1. Javoblarni to'liq tekshirish
+        for (let i = 1; i <= currentTest.questions; i++) {
+             const answerData = currentTest.answers[i];
+             let isAnswered = false;
+
+             if (answerData && answerData.answer) {
+                 const answer = answerData.answer;
+                 // Javob satr yoki elementlari bor massiv bo'lsa, "javob berilgan" hisoblanadi
+                 if (Array.isArray(answer) && answer.length > 0) isAnswered = true;
+                 if (typeof answer === 'string' && answer.length > 0) isAnswered = true;
+             }
+            
+             if (!isAnswered) {
+                 Swal.fire('Diqqat!', `№${i} savolning javobi belgilanmagan.`, 'warning');
+                 adminGoto(i);
+                 return;
+             }
+        }
+        
+        // 2. Payload ni yaratish
+        const testPayload = {
+            name: currentTest.name,
+            questions: currentTest.questions,
+            variants: currentTest.variants,
+            pdf_base64: currentTest.pdf, 
+            // JSON formatida saqlash uchun lug'atni string formatiga o'tkazish
+            answers: JSON.stringify(currentTest.answers) 
+        };
+
+        // 3. Backendga yuborish
+        try {
+            Swal.fire({
+                title: 'Test yaratilmoqda...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading()
+                }
+            });
+            
+            const response = await fetch('/api/test/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(testPayload)
+            });
+
+            const result = await response.json();
+            Swal.close();
+
+            if (response.ok) {
+                // Yangi token bilan 'test-created' sahifasiga yo'naltirish
+                window.location.href = `/test-created?name=${currentTest.name}&code=${result.test_code}&id=${result.test_id}&site_token=${result.site_token}`;
+            } else {
+                Swal.fire('Server Xatosi', result.message || 'Testni saqlashda kutilmagan xato yuz berdi.', 'error');
+            }
+        } catch(error) {
+            console.error('Saqlash xatosi:', error);
+            Swal.fire('Ulanish Xatosi', 'Backendga ulanib bo‘lmadi. Server ishlayotganiga ishonch hosil qiling.', 'error');
+        }
+    }
+</script>
+{% endblock %}

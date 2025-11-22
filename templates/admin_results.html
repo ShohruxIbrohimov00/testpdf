@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Natijalar{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <a href="{{ url_for('admin_dash') }}" class="text-gray-700 hover:text-gray-900 transition">
+                <i class="fa-solid fa-arrow-left text-2xl"></i>
+            </a>
+            <h1 class="text-xl font-bold text-gray-800">
+                Natijalar: <span id="test-title" class="text-gray-600">Yuklanmoqda...</span>
+            </h1>
+            <div class="w-10"></div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-4 sm:p-6">
+
+        <!-- Yuklanish -->
+        <div id="loading" class="text-center py-20">
+            <i class="fa-solid fa-spinner fa-spin text-4xl text-gray-500 mb-4"></i>
+            <p class="text-gray-600">Natijalar yuklanmoqda...</p>
+        </div>
+
+        <!-- Asosiy kontent -->
+        <div id="results-container" class="hidden space-y-6">
+
+            <!-- Statistika -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                <div class="bg-white p-5 rounded-lg border border-gray-200">
+                    <p class="text-sm text-gray-600">Jami talaba</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1" id="total-students">0</p>
+                </div>
+                <div class="bg-white p-5 rounded-lg border border-gray-200">
+                    <p class="text-sm text-gray-600">Oʻrtacha ball</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1" id="avg-percentage">0%</p>
+                </div>
+                <div class="bg-white p-5 rounded-lg border border-gray-200">
+                    <p class="text-sm text-gray-600">Eng yuqori</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1" id="first-place">0%</p>
+                </div>
+                <div class="bg-white p-5 rounded-lg border border-gray-200">
+                    <p class="text-sm text-gray-600">Eng past</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1" id="last-place">0%</p>
+                </div>
+            </div>
+
+            <!-- Jadval -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-100 text-gray-700 text-sm uppercase tracking-wider">
+                            <tr class="border-b border-gray-200">
+                                <th class="px-5 py-4 font-medium">Oʻrin</th>
+                                <th class="px-5 py-4 font-medium">Ism Familya</th>
+                                <th class="px-5 py-4 text-center font-medium hidden sm:table-cell">Savollar</th>
+                                <th class="px-5 py-4 text-center font-medium">Toʻgʻri</th>
+                                <th class="px-5 py-4 text-center font-medium">Xato</th>
+                                <th class="px-5 py-4 text-center font-medium">Ball</th>
+                                <th class="px-5 py-4 text-center font-medium hidden sm:table-cell">Sana</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-table-body" class="text-gray-800">
+                            <!-- JS bilan toʻldiriladi -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Hech kim yoʻq boʻlsa -->
+            <div id="no-results" class="hidden text-center py-16 bg-white rounded-lg border-2 border-dashed border-gray-300">
+                <i class="fa-solid fa-user-graduate text-6xl text-gray-400 mb-4"></i>
+                <p class="text-xl font-medium text-gray-700">Hali hech kim testni ishlamagan</p>
+                <p class="text-gray-500 mt-2">Talabalar link orqali kirganda natijalar shu yerda paydo boʻladi</p>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const testId = {{ test_id }};
+
+    function formatUzbekDate(dateString) {
+        const months = ['yanvar','fevral','mart','aprel','may','iyun','iyul','avgust','sentabr','oktabr','noyabr','dekabr'];
+        const d = new Date(dateString);
+        const day = d.getDate();
+        const month = months[d.getMonth()];
+        const h = d.getHours().toString().padStart(2,'0');
+        const m = d.getMinutes().toString().padStart(2,'0');
+        return `${day}-${month} ${h}:${m}`;
+    }
+
+    async function loadAdminResults() {
+        const loading = document.getElementById('loading');
+        const container = document.getElementById('results-container');
+        const tableBody = document.getElementById('results-table-body');
+        const noResults = document.getElementById('no-results');
+        const testTitle = document.getElementById('test-title');
+
+        try {
+            const res = await fetch(`/api/results/all/${testId}`);
+            if (!res.ok) throw new Error("Ma'lumot yuklanmadi");
+            const data = await res.json();
+
+            testTitle.textContent = data.test_name || "Test";
+
+            if (data.results.length === 0) {
+                loading.classList.add('hidden');
+                noResults.classList.remove('hidden');
+                return;
+            }
+
+            // Tartiblash
+            data.results.sort((a, b) => b.percentage - a.percentage);
+
+            // Statistika
+            document.getElementById('total-students').textContent = data.results.length;
+            const avg = data.results.reduce((s, r) => s + r.percentage, 0) / data.results.length;
+            document.getElementById('avg-percentage').textContent = avg.toFixed(1) + '%';
+            document.getElementById('first-place').textContent = data.results[0].percentage + '%';
+            document.getElementById('last-place').textContent = data.results[data.results.length-1].percentage + '%';
+
+            tableBody.innerHTML = '';
+
+            data.results.forEach((r, i) => {
+                const place = i + 1;
+
+                // Ism toʻgʻri chiqadi, agar boʻsh boʻlsa "Ismi kiritilmagan"
+                const displayName = r.name && r.name.trim() !== '' ? r.name.trim() : 'Ismi kiritilmagan';
+
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 hover:bg-gray-50 transition';
+
+                row.innerHTML = `
+                    <td class="px-5 py-4 font-semibold text-gray-900">${place}</td>
+                    <td class="px-5 py-4 font-medium text-gray-900">${displayName}</td>
+                    <td class="px-5 py-4 text-center text-gray-600 hidden sm:table-cell">${data.questions_count}</td>
+                    <td class="px-5 py-4 text-center font-medium text-green-600">${r.correct}</td>
+                    <td class="px-5 py-4 text-center font-medium text-red-600">${r.wrong}</td>
+                    <td class="px-5 py-4 text-center">
+                        <span class="inline-block px-4 py-2 rounded-full text-white font-bold text-sm
+                            ${r.percentage >= 90 ? 'bg-green-600' : 
+                              r.percentage >= 70 ? 'bg-blue-600' : 
+                              r.percentage >= 50 ? 'bg-yellow-600' : 'bg-red-600'}">
+                            ${r.percentage}%
+                        </span>
+                    </td>
+                    <td class="px-5 py-4 text-center text-sm text-gray-500 hidden sm:table-cell">
+                        ${formatUzbekDate(r.date)}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            loading.classList.add('hidden');
+            container.classList.remove('hidden');
+
+        } catch (err) {
+            loading.innerHTML = `<p class="text-red-600 font-medium text-center">Xatolik: ${err.message}</p>`;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAdminResults);
+</script>
+{% endblock %}

@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Test Yaratildi{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <a href="{{ url_for('admin_dash') }}" class="text-gray-700 hover:text-gray-900 transition">
+                <i class="fa-solid fa-arrow-left text-2xl"></i>
+            </a>
+            <h1 class="text-xl font-bold text-gray-800">Test Yaratildi</h1>
+            <div class="w-10"></div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-4 sm:p-6">
+
+        <!-- Asosiy karta -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            
+            <!-- Yuqori chiziq -->
+            <div class="h-2 bg-gradient-to-r from-blue-500 via-green-500 to-emerald-500"></div>
+
+            <div class="p-8 sm:p-12 text-center">
+
+                <!-- Ikonka -->
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 text-green-600 mb-6">
+                    <i class="fa-solid fa-circle-check text-4xl"></i>
+                </div>
+
+                <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+                    Tabriklaymiz!
+                </h1>
+                <p class="text-lg text-gray-600 mb-10">
+                    Yangi test muvaffaqiyatli yaratildi
+                </p>
+
+                <!-- Test nomi -->
+                <div class="bg-gray-50 rounded-lg border border-gray-200 p-6 mb-8">
+                    <p class="text-sm font-semibold text-gray-500 mb-2">Test nomi</p>
+                    <p id="created-name" class="text-2xl font-bold text-gray-800 truncate">...</p>
+                </div>
+
+                <!-- Link -->
+                <div class="mb-10">
+                    <p class="text-left text-sm font-semibold text-gray-700 mb-3">
+                        Talabalar quyidagi havola orqali testga kirishadi:
+                    </p>
+                    <div class="flex items-center bg-gray-50 border border-gray-300 rounded-lg overflow-hidden 
+                                focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-opacity-20 
+                                transition-all duration-200">
+                        <input id="site-link" type="text" readonly
+                               class="flex-1 px-5 py-4 text-blue-700 font-mono text-sm bg-transparent outline-none select-all"
+                               placeholder="Yuklanmoqda...">
+                        <button onclick="copyLink('site-link')"
+                                class="px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold transition flex items-center gap-2">
+                            <i class="fa-solid fa-copy"></i>
+                            <span class="hidden sm:inline">Nusxalash</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Asosiy tugma -->
+                <a href="{{ url_for('admin_dash') }}"
+                   class="inline-flex items-center justify-center gap-3 w-full py-5 bg-emerald-600 hover:bg-emerald-700 
+                          text-white font-bold rounded-lg shadow-md hover:shadow-lg transition text-lg">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    Boshqaruv paneliga qaytish
+                </a>
+
+                <!-- Eslatma -->
+                <div class="mt-10 p-5 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm text-blue-800 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-info"></i>
+                        Ushbu havolani talabalarga yuboring — ular darhol testni boshlaydi
+                    </p>
+                </div>
+
+                <!-- Xavfsizlik eslatmasi -->
+                <p class="text-xs text-gray-500 mt-8 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-green-600"></i>
+                    Havola noyob va xavfsiz — faqat siz yaratgan talabalar foydalana oladi
+                </p>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const name = urlParams.get('name') || 'Nomsiz test';
+        const siteToken = urlParams.get('site_token');
+
+        // Link yaratish
+        const siteLink = siteToken && siteToken !== 'null' && siteToken !== ''
+            ? `${window.location.origin}/test/start?token=${siteToken}`
+            : "Xato: Test havolasi yaratilmadi. Adminga murojaat qiling.";
+
+        // Ma'lumotlarni joylashtirish
+        document.getElementById('created-name').textContent = name;
+        document.getElementById('site-link').value = siteLink;
+
+        // Agar link to'g'ri bo'lsa — avto tanlash
+        if (!siteLink.includes("Xato")) {
+            const input = document.getElementById('site-link');
+            input.focus();
+            input.select();
+        }
+    });
+
+    // Nusxalash funksiyasi
+    async function copyLink(inputId) {
+        const input = document.getElementById(inputId);
+        const link = input.value;
+
+        if (link.includes("Xato")) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Havola mavjud emas',
+                text: 'Test havolasi yaratilmadi. Iltimos, qayta urinib koʻring.',
+            });
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(link);
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Havola nusxalandi!',
+                showConfirmButton: false,
+                timer: 2000
+            });
+        } catch (err) {
+            // Eski brauzerlar uchun
+            input.select();
+            input.setSelectionRange(0, 99999);
+            document.execCommand('copy');
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Nusxalandi!',
+                timer: 2000
+            });
+        }
+    }
+</script>
+{% endblock %}

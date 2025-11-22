@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+{% block title %}Test Ishlash{% endblock %}
+
+{% block content %}
+
+
+<main class="flex-1 overflow-auto p-4 bg-gray-50 flex flex-col relative">
+
+    <div id="loading-state" class="flex-1 flex items-center justify-center text-gray-500">
+        <i class="fa-solid fa-spinner fa-spin fa-3x"></i>
+        <span class="ml-4 text-xl">Test yuklanmoqda...</span>
+    </div>
+
+    <div id="test-content" class="hidden flex-1 flex flex-col max-w-6xl mx-auto w-full"> 
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1">
+
+            <!-- PDF -->
+            <div class="pdf col-span-1 lg:col-span-2 bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-200 h-[70vh] lg:h-full">
+                <embed id="student-pdf" class="w-full h-full pointer-events-auto" allowfullscreen>
+            </div>
+
+            <div class="col-span-1 flex flex-col">
+
+                <div class="bg-white p-4 rounded-2xl shadow-2xl border border-gray-100 flex-shrink-0">
+                    <div class="flex justify-center gap-4 flex-wrap" id="s-opts"></div>
+
+                    <div id="s-textbox" class="hidden mt-6">
+                        <input type="text" id="s-text" placeholder="Javobingizni bu yerga yozing..."
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 transition shadow-sm">
+                        <button class="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md transition"
+                                onclick="saveStudentText()">
+                            Saqlash
+                        </button>
+                    </div>
+                </div>
+
+                <div class="nav bg-white p-4 mt-4 rounded-2xl shadow-2xl border border-gray-100 flex-shrink-0">
+
+                    <div class="hidden lg:flex flex-wrap gap-3 justify-center max-h-72 overflow-y-auto" id="s-nav-desktop"></div>
+
+                    <div class="flex lg:hidden">
+                        <div class="flex space-x-2 pb-1 overflow-x-auto w-full items-center" id="s-nav-mobile-wrapper">
+                            <div class="flex space-x-2 flex-shrink-0" id="s-nav-mobile"></div>
+
+                            <button class="px-5 py-2.5 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition flex-shrink-0 ml-4 shadow-lg"
+                                    onclick="finishTest()">
+                                TUGATISH
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="hidden lg:block mt-4">
+                        <button class="w-full px-5 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition shadow-lg"
+                                onclick="finishTest()">
+                            TUGATISH
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+</main>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let testData = null;
+    let studentAnswers = {};
+    let currentQ = 1;
+    let testId = {{ test_id }};
+
+    // ====================== YUKLASH ======================
+    async function loadTest() {
+        try {
+            const resp = await fetch(`/api/test/get_by_id/${testId}`);
+            if (!resp.ok) throw new Error("Test topilmadi");
+            testData = await resp.json();
+
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('test-content').classList.remove('hidden');
+            
+
+            // PDF
+            if (testData.pdf && testData.pdf.trim()) {
+                const src = testData.pdf.startsWith('data:') ? testData.pdf : 'data:application/pdf;base64,' + testData.pdf;
+                document.getElementById('student-pdf').src = src;
+            }
+
+            // Navigatsiyani ikkala joyga ham yaratamiz
+            buildNav('s-nav-desktop', testData.questions, studentGoto);
+            buildNav('s-nav-mobile', testData.questions, studentGoto);
+
+            studentGoto(1);
+        } catch (e) {
+            document.getElementById('loading-state').innerHTML = `<p class="text-red-600 text-xl">Xato: ${e.message}</p>`;
+        }
+    }
+
+    // ====================== NAVIGATSIYA ======================
+    function buildNav(id, count, fn) {
+        const container = document.getElementById(id);
+        container.innerHTML = '';
+        for (let i = 1; i <= count; i++) {
+            const btn = document.createElement('div');
+            // 🔥 'box-border' + 'relative' qo'shildi!
+            btn.className = 'n w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-300 transition flex-shrink-0 box-border relative';
+            btn.textContent = i;
+            btn.onclick = () => fn(i);
+            container.appendChild(btn);
+        }
+    }
+    // ====================== NAVIGATSIYA (TUZATILGAN QISM) ======================
+
+    // O'rnatilgan funksiyani almashtirish
+    // studentGoto funksiyasining to'liq va yakuniy versiyasi
+    function studentGoto(n) {
+        const prevQ = currentQ; // Avvalgi savolni eslab qolish
+        currentQ = n;           // Joriy savolni yangilash
+
+        // 1. Avvalgi savol tugmasini yangilash (chegarani olib tashlash)
+        updateNavButton(prevQ); 
+        
+        // 2. Yangi savol tugmasini JORIY deb belgilash (chegara qo'shish)
+        updateNavButton(currentQ); 
+
+        // Savol variantlarini yuklash
+        loadStudentQ(n);
+        
+        // 🔥 Mobil scroll mantiqini faqat bu yerda ishga tushiramiz (faqat savol o'zgarganda)
+        const mobileWrapper = document.getElementById('s-nav-mobile-wrapper');
+        const currentMobileBtn = document.querySelector('#s-nav-mobile .n:nth-child(' + n + ')');
+        if (mobileWrapper && currentMobileBtn) {
+            // Scrollning oldingi tugma ustiga surilishini ta'minlaydi
+            mobileWrapper.scrollLeft = currentMobileBtn.offsetLeft - mobileWrapper.offsetWidth / 2 + currentMobileBtn.offsetWidth / 2;
+        }
+    }
+
+    // O'rnatilgan funksiyani almashtirish
+// ====================== NAVIGATSIYA (TUZATILGAN QISM) ======================
+
+    // updateNavButton funksiyasining YANGI VA ANIQ YECHIMI
+    function updateNavButton(n) {
+        const btnDesktop = document.querySelector(`#s-nav-desktop .n:nth-child(${n})`);
+        const btnMobile = document.querySelector(`#s-nav-mobile .n:nth-child(${n})`);
+        
+        // Har ikkala tugmani (yoki mavjud bo'lsa) qayta ishlash uchun massiv
+        const buttons = [btnDesktop, btnMobile].filter(b => b !== null);
+        
+        const answer = studentAnswers[n];
+        const answered = answer && (
+            (Array.isArray(answer) && answer.length > 0) ||
+            (typeof answer === 'string' && answer.trim().length > 0)
+        );
+        
+        const isCurrent = (n === currentQ);
+
+        buttons.forEach(b => {
+            if (!b) return;
+
+            // Barcha rang/chegara klasslarini tozalash
+            b.classList.remove('bg-gray-200', 'bg-blue-500', 'text-gray-700', 'text-white', 'border-4', 'border-blue-600');
+
+            if (answered) {
+                // JAVOB BERILGAN (Fon ko'k)
+                b.classList.add('bg-blue-500', 'text-white');
+            } else {
+                // JAVOB BERILMAGAN (Fon kulrang)
+                b.classList.add('bg-gray-200', 'text-gray-700');
+            }
+
+            // JORIY SAVOLNI BELGILASH (CHEGARA)
+            if (isCurrent) {
+                // Chegara har doim joriy savolda chiqishi kerak.
+                b.classList.add('border-4', 'border-blue-500');
+            }
+        });
+    }
+    
+    // ====================== SAVOL YUKLASH ======================
+    function loadStudentQ(n) {
+        const opts = document.getElementById('s-opts');
+        opts.innerHTML = '';
+        document.getElementById('s-textbox').classList.add('hidden');
+        opts.classList.remove('hidden');
+
+        const qType = testData.question_types ? testData.question_types[n.toString()] : 'single';
+        const saved = studentAnswers[n];
+
+        if (qType === 'text') {
+            opts.classList.add('hidden');
+            document.getElementById('s-textbox').classList.remove('hidden');
+            document.getElementById('s-text').value = saved || '';
+            return;
+        }
+
+        const isMultiple = qType === 'multiple';
+        const letters = 'ABCDE'.slice(0, testData.variants);
+
+        letters.split('').forEach(l => {
+            const div = document.createElement('div');
+            div.textContent = l;
+            div.className = `o w-10 h-10 border-4 border-gray-300 bg-white flex items-center justify-center font-black text-xl cursor-pointer transition duration-200 hover:border-blue-500 shadow-md ${isMultiple ? 'rounded-xl' : 'rounded-full'}`;
+
+            // Avvalgi javobni tiklash
+            let active = false;
+            if (saved) {
+                if (isMultiple && Array.isArray(saved) && saved.includes(l)) active = true;
+                if (!isMultiple && saved === l) active = true;
+            }
+            if (active) {
+                div.classList.add('active', 'bg-blue-600', 'text-white', 'border-blue-600');
+                div.classList.remove('bg-white', 'border-gray-300');
+            }
+
+            div.onclick = () => {
+                if (!isMultiple) {
+                    opts.querySelectorAll('.o').forEach(x => {
+                        x.classList.remove('active', 'bg-blue-600', 'text-white', 'border-blue-600');
+                        x.classList.add('bg-white', 'border-gray-300');
+                    });
+                }
+                div.classList.toggle('active');
+                div.classList.toggle('bg-blue-600');
+                div.classList.toggle('text-white');
+                div.classList.toggle('border-blue-600');
+                div.classList.toggle('bg-white');
+                div.classList.toggle('border-gray-300');
+
+                saveStudent(n, isMultiple);
+            };
+
+            opts.appendChild(div);
+        });
+    }
+
+    // ====================== JAVOB SAQLASH ======================
+    function saveStudent(n, isMultiple) {
+        const selected = [...document.querySelectorAll('#s-opts .o.active')].map(x => x.textContent);
+        studentAnswers[n] = isMultiple ? selected : (selected[0] || null);
+        updateNavButton(n);
+    }
+
+    function saveStudentText() {
+        const val = document.getElementById('s-text').value.trim();
+        if (!val) {
+            Swal.fire('Xato', 'Javob yozing', 'warning');
+            return;
+        }
+        studentAnswers[currentQ] = val;
+        updateNavButton(currentQ);
+        Swal.fire('Saqlandi', '', 'success');
+    }
+
+    // ====================== TUGATISH ======================
+    async function finishTest() {
+        // Javobsiz savollar soni
+        const unanswered = Array.from({length: testData.questions}, (_, i) => i + 1)
+            .filter(num => {
+                const ans = studentAnswers[num];
+                return !ans || 
+                    (Array.isArray(ans) ? ans.length === 0 : !ans.toString().trim());
+            });
+
+        if (unanswered.length > 0) {
+            const res = await Swal.fire({
+                title: 'Diqqat!',
+                html: `<b>${unanswered.length}</b> ta savol javobsiz qoldi.<br>Testni baribir tugatasizmi?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ha, tugatish',
+                cancelButtonText: 'Orqaga'
+            });
+            if (!res.isConfirmed) return;
+        }
+
+        // URL dan user_id ni olamiz (student_info.html dan kelgan)
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user_id');
+
+        if (!userId) {
+            Swal.fire('Xato', 'Foydalanuvchi maʼlumotlari topilmadi. Iltimos, testni qayta boshlang.', 'error');
+            return;
+        }
+
+        const payload = {
+            user_id: userId,                    // FAQAT SHU KERAK!
+            student_answers: studentAnswers
+        };
+
+        Swal.fire({
+            title: 'Yuborilmoqda...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        try {
+            const r = await fetch(`/api/result/save/${testId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await r.json();
+
+            if (r.ok && data.status === 'success') {
+                Swal.fire({
+                    title: 'Tabriklaymiz!',
+                    text: 'Test muvaffaqiyatli tugadi!',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = `/result/${testId}?r=${userId}`;
+                });
+            } else {
+                Swal.fire('Xato', data.message || 'Natija saqlanmadi', 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            Swal.fire('Internet xatosi', 'Natijani yuborib boʻlmadi', 'error');
+        }
+    }
+        
+    document.addEventListener('DOMContentLoaded', loadTest);
+</script>
+{% endblock %}
