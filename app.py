@@ -24,10 +24,7 @@ if database_url and database_url.startswith("postgres://"):
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'sizning_juda_maxfiy_va_noyob_kalitingiz_bu_yerda' 
 
-# 🔥 MUHIM O'ZGARTIRISH: Agar database_url mavjud bo'lsa (Renderda), uni ishlatish.
-# Aks holda (lokalda), 'sqlite:///database.db' dan foydalanish.
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///database.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 
 db = SQLAlchemy(app)
 
