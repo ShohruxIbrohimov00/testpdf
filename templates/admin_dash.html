@@ -4,193 +4,260 @@
 {% block content %}
 <div class="min-h-screen bg-gray-50">
 
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
-        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-            <h1 class="text-xl font-bold text-gray-800 flex items-center">
-                Admin Panel
-            </h1>
-            <a href="/" class="text-gray-700 hover:text-gray-900 transition">
-                <i class="fa-solid fa-right-from-bracket text-xl"></i>
-            </a>
-        </div>
-    </header>
+        <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <h1 class="text-xl font-bold text-gray-800 flex items-center">
+                Admin Panel
+            </h1>
+            <a href="/" class="text-gray-700 hover:text-gray-900 transition">
+                <i class="fa-solid fa-right-from-bracket text-xl"></i>
+            </a>
+        </div>
+    </header>
 
-    <main class="max-w-6xl mx-auto p-4 sm:p-6">
+    <main class="max-w-6xl mx-auto p-4 sm:p-6">
 
-        <!-- Statistika kartalari (faqat 2 ta) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-lg border border-gray-200 text-center">
-                <p class="text-sm text-gray-600">Jami testlar</p>
-                <p id="total-tests-stat" class="text-3xl font-bold text-gray-800 mt-2">0</p>
-            </div>
-            <div class="bg-white p-6 rounded-lg border border-gray-200 text-center">
-                <p class="text-sm text-gray-600">Jami natijalar</p>
-                <p id="total-results-stat" class="text-3xl font-bold text-gray-800 mt-2">0</p>
-            </div>
-        </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg border border-gray-200 text-center">
+                <p class="text-sm text-gray-600">Jami testlar</p>
+                <p id="total-tests-stat" class="text-3xl font-bold text-gray-800 mt-2">0</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg border border-gray-200 text-center">
+                <p class="text-sm text-gray-600">Jami natijalar</p>
+                <p id="total-results-stat" class="text-3xl font-bold text-gray-800 mt-2">0</p>
+            </div>
+        </div>
 
-        <!-- Yangi test yaratish tugmasi (alohida, katta va chiroyli) -->
-        <div class="mb-10 text-center">
-            <a href="{{ url_for('create_page') }}" 
-               class="inline-flex items-center gap-3 px-10 py-5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition transform hover:scale-105">
-                <i class="fa-solid fa-plus-circle text-2xl"></i>
-                Yangi test yaratish
-            </a>
-        </div>
+                <div class="mb-10 text-center">
+            <a href="{{ url_for('create_page') }}" 
+               class="inline-flex items-center gap-3 px-10 py-5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition transform hover:scale-105">
+                <i class="fa-solid fa-plus-circle text-2xl"></i>
+                Yangi test yaratish
+            </a>
+        </div>
 
-        <!-- Sarlavha -->
-        <div class="mb-6">
-            <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-                Mening imtihonlarim
-            </h2>
-        </div>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+            <h2 class="text-2xl font-bold text-gray-800">
+                Mening imtihonlarim
+            </h2>
+            
+                        <div class="relative w-full sm:w-80">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="search-input" onkeyup="filterTests()"
+                     class="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition shadow-sm"
+                     placeholder="Test nomini qidirish...">
+            </div>
+        </div>
 
-        <!-- Testlar roʻyxati -->
-        <div id="tests-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-abel-colspan-full text-center py-20">
-                <i class="fa-solid fa-spinner fa-spin text-4xl text-gray-400 mb-4"></i>
-                <p class="text-gray-600">Testlar yuklanmoqda...</p>
-            </div>
-        </div>
+                <div id="loading-state" class="text-center py-20 bg-white rounded-lg border-2 border-dashed border-gray-300">
+            <i class="fa-solid fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
+            <p class="text-gray-600">Testlar yuklanmoqda...</p>
+        </div>
 
-        <!-- Agar test boʻlmasa -->
-        <div id="no-tests" class="hidden text-center py-20 bg-white rounded-lg border-2 border-dashed border-gray-300">
-            <i class="fa-solid fa-face-sad-tear text-6xl text-gray-400 mb-6"></i>
-            <p class="text-2xl font-bold text-gray-700 mb-3">Hozircha hech qanday test yoʻq</p>
-            <p class="text-gray-600">Yangi test yaratish bilan boshlang!</p>
-            <a href="{{ url_for('create_page') }}" 
-               class="mt-6 inline-block px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition">
-                Yangi test yaratish
-            </a>
-        </div>
+                        <div id="tests-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
+                    </div>
 
-    </main>
+                <div id="no-tests" class="hidden text-center py-20 bg-white rounded-lg border-2 border-dashed border-gray-300">
+            <i class="fa-solid fa-face-sad-tear text-6xl text-gray-400 mb-6"></i>
+            <p class="text-2xl font-bold text-gray-700 mb-3">Hozircha hech qanday test yoʻq</p>
+            <p class="text-gray-600">Yangi test yaratish bilan boshlang!</p>
+            <a href="{{ url_for('create_page') }}" 
+               class="mt-6 inline-block px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition">
+                Yangi test yaratish
+            </a>
+        </div>
+        
+        <div id="no-search-results" class="hidden text-center py-20 bg-white rounded-lg border-2 border-dashed border-gray-300">
+            <i class="fa-solid fa-search text-6xl text-gray-400 mb-6"></i>
+            <p class="text-2xl font-bold text-gray-700 mb-3">Hech qanday natija topilmadi</p>
+            <p class="text-gray-600">Qidiruv soʻzingizni tekshirib koʻring.</p>
+        </div>
+
+
+    </main>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    function showResults(testId) {
-        window.location.href = `/results/admin/${testId}`;
-    }
+    // Global o'zgaruvchi. Serverdan yuklangan barcha testlarni saqlash uchun
+    let allTests = [];
+    
+    // Asosiy elementlar
+    const list = document.getElementById('tests-list');
+    const noTestsDiv = document.getElementById('no-tests');
+    const loadingState = document.getElementById('loading-state');
+    const noSearchResultsDiv = document.getElementById('no-search-results'); // Yangi qidiruv natijasi elementi
 
-    function copyShareLink(token) {
-        const link = `${window.location.origin}/test/start?token=${token}`;
-        navigator.clipboard.writeText(link).then(() => {
-            Swal.fire({
-                icon: 'success',
-                title: 'Link nusxalandi!',
-                text: 'Talabalarga ushbu linkni yuboring',
-                timer: 3000,
-                showConfirmButton: false
-            });
-        }).catch(() => {
-            prompt('Linkni nusxalang:', link);
-        });
-    }
+    // ----------------------------------------------------
+    // FUNKSIYALAR
+    // ----------------------------------------------------
 
-    function deleteTest(testId, testName) {
-        Swal.fire({
-            title: 'Oʻchirishni tasdiqlang',
-            text: `"${testName}" va barcha natijalari butunlay oʻchib ketadi!`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Ha, oʻchirilsin',
-            cancelButtonText: 'Bekor qilish',
-            confirmButtonColor: '#dc2626',
-            cancelButtonColor: '#6b7280'
-        }).then(async (result) => {
-            if (!result.isConfirmed) return;
+    function showResults(testId) {
+        window.location.href = `/results/admin/${testId}`;
+    }
 
-            Swal.fire({ title: 'Oʻchirilmoqda...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    function copyShareLink(token) {
+        const link = `${window.location.origin}/test/start?token=${token}`;
+        navigator.clipboard.writeText(link).then(() => {
+            Swal.fire({
+                icon: 'success',
+                title: 'Link nusxalandi!',
+                text: 'Talabalarga ushbu linkni yuboring',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        }).catch(() => {
+            prompt('Linkni nusxalang:', link);
+        });
+    }
 
-            try {
-                const res = await fetch(`/api/test/delete/${testId}`, { method: 'DELETE' });
-                if (!res.ok) throw new Error('Xatolik yuz berdi');
+    function deleteTest(testId, testName) {
+        Swal.fire({
+            title: 'Oʻchirishni tasdiqlang',
+            text: `"${testName}" va barcha natijalari butunlay oʻchib ketadi!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ha, oʻchirilsin',
+            cancelButtonText: 'Bekor qilish',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280'
+        }).then(async (result) => {
+            if (!result.isConfirmed) return;
 
-                Swal.fire({ icon: 'success', title: 'Oʻchirildi!', timer: 1500, showConfirmButton: false });
-                loadTests();
-            } catch (err) {
-                Swal.fire('Xato', 'Testni oʻchirib boʻlmadi', 'error');
-            }
-        });
-    }
+            Swal.fire({ title: 'Oʻchirilmoqda...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-    async function loadTests() {
-        const list = document.getElementById('tests-list');
-        const noTestsDiv = document.getElementById('no-tests');
+            try {
+                const res = await fetch(`/api/test/delete/${testId}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('Xatolik yuz berdi');
 
-        try {
-            const res = await fetch('/api/tests/load');
-            if (!res.ok) throw new Error('Testlar yuklanmadi');
+                Swal.fire({ icon: 'success', title: 'Oʻchirildi!', timer: 1500, showConfirmButton: false });
+                loadTests(); // Yangi ro'yxatni yuklash
+            } catch (err) {
+                Swal.fire('Xato', 'Testni oʻchirib boʻlmadi', 'error');
+            }
+        });
+    }
+    
+    // 🔥 Test kartalarini chizish funksiyasi
+    function renderTests(testsToRender) {
+        list.innerHTML = '';
 
-            const tests = await res.json();
-
-            // Statistika yangilash
-            document.getElementById('total-tests-stat').textContent = tests.length;
-            document.getElementById('total-results-stat').textContent = 
-                tests.reduce((sum, t) => sum + (t.results_count || 0), 0);
-
-            list.innerHTML = '';
-
-            if (tests.length === 0) {
-                list.classList.add('hidden');
+        if (testsToRender.length === 0) {
+            // Agar qidiruv natijasi bo'lmasa
+            const isSearching = document.getElementById('search-input').value.trim() !== '';
+            
+            if (isSearching) {
+                noSearchResultsDiv.classList.remove('hidden');
+                noTestsDiv.classList.add('hidden');
+            } else {
+                // Agar umuman test bo'lmasa (yuklanishdan so'ng)
                 noTestsDiv.classList.remove('hidden');
-                return;
+                noSearchResultsDiv.classList.add('hidden');
             }
-
-            noTestsDiv.classList.add('hidden');
-            list.classList.remove('hidden');
-
-            tests.forEach(t => {
-                const card = document.createElement('div');
-                card.className = 'bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition';
-
-                card.innerHTML = `
-                    <div class="p-6">
-                        <h3 class="text-lg font-bold text-gray-900 mb-3 line-clamp-2">${t.name}</h3>
-                        <div class="space-y-2 text-sm text-gray-600">
-                            <p><i class="fa-solid fa-list-ol text-blue-600 mr-2"></i><strong>${t.questions}</strong> ta savol</p>
-                            <p><i class="fa-solid fa-users text-green-600 mr-2"></i><strong>${t.results_count || 0}</strong> kishi ishladi</p>
-                        </div>
-                    </div>
-
-                    <div class="px-6 pb-5 border-t border-gray-100 pt-4">
-                        <div class="grid grid-cols-3 gap-3">
-                            <button onclick="showResults(${t.id})"
-                                    class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition flex items-center justify-center gap-1">
-                                <i class="fa-solid fa-chart-column"></i>
-                                <span class="hidden sm:inline">Natijalar</span>
-                            </button>
-
-                            <button onclick="copyShareLink('${t.site_token}')"
-                                    class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition flex items-center justify-center gap-1">
-                                <i class="fa-solid fa-link"></i>
-                                <span class="hidden sm:inline">Link</span>
-                            </button>
-
-                            <button onclick="deleteTest(${t.id}, '${t.name.replace(/'/g, "\\'")}')"
-                                    class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-
-                list.appendChild(card);
-            });
-
-        } catch (err) {
-            list.innerHTML = `
-                <div class="col-span-full text-center py-20">
-                    <p class="text-red-600 font-medium text-xl">Xatolik yuz berdi</p>
-                    <p class="text-gray-600 mt-2">${err.message}</p>
-                </div>
-            `;
+            list.classList.add('hidden');
+            return;
         }
+
+        // Agar natijalar bo'lsa
+        noTestsDiv.classList.add('hidden');
+        noSearchResultsDiv.classList.add('hidden');
+        list.classList.remove('hidden');
+
+        testsToRender.forEach(t => {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition';
+
+            card.innerHTML = `
+                    <div class="p-6">
+                        <h3 class="text-lg font-bold text-gray-900 mb-3 line-clamp-2">${t.name}</h3>
+                        <div class="space-y-2 text-sm text-gray-600">
+                            <p><i class="fa-solid fa-list-ol text-blue-600 mr-2"></i><strong>${t.questions}</strong> ta savol</p>
+                            <p><i class="fa-solid fa-users text-green-600 mr-2"></i><strong>${t.results_count || 0}</strong> kishi ishladi</p>
+                        </div>
+                    </div>
+
+                    <div class="px-6 pb-5 border-t border-gray-100 pt-4">
+                        <div class="grid grid-cols-3 gap-3">
+                            <button onclick="showResults(${t.id})"
+                                    class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-chart-column"></i>
+                                <span class="hidden sm:inline">Natijalar</span>
+                            </button>
+
+                            <button onclick="copyShareLink('${t.site_token}')"
+                                    class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-link"></i>
+                                <span class="hidden sm:inline">Link</span>
+                            </button>
+
+                            <button onclick="deleteTest(${t.id}, '${t.name.replace(/'/g, "\\'")}')"
+                                    class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                list.appendChild(card);
+            });
     }
 
-    document.addEventListener('DOMContentLoaded', loadTests);
+    // 🔥 Testlarni Qidirish funksiyasi
+    function filterTests() {
+        const searchTerm = document.getElementById('search-input').value.toLowerCase();
+        
+        if (searchTerm === '') {
+            renderTests(allTests);
+            return;
+        }
+
+        const filteredTests = allTests.filter(test => 
+            test.name.toLowerCase().includes(searchTerm)
+        );
+        
+        renderTests(filteredTests);
+    }
+
+
+    async function loadTests() {
+        
+        // Boshida faqat yuklanish holatini ko'rsatish
+        loadingState.classList.remove('hidden');
+        list.classList.add('hidden');
+        noTestsDiv.classList.add('hidden');
+        noSearchResultsDiv.classList.add('hidden');
+
+        try {
+            const res = await fetch('/api/tests/load');
+            if (!res.ok) throw new Error('Testlar yuklanmadi');
+
+            allTests = await res.json(); // Global o'zgaruvchiga saqlash
+            
+            // Loading tugatildi
+            loadingState.classList.add('hidden');
+
+
+            // Statistika yangilash
+            document.getElementById('total-tests-stat').textContent = allTests.length;
+            document.getElementById('total-results-stat').textContent = 
+                allTests.reduce((sum, t) => sum + (t.results_count || 0), 0);
+
+            // Testlarni render qilish
+            renderTests(allTests);
+
+        } catch (err) {
+            loadingState.classList.add('hidden');
+            list.classList.remove('hidden');
+            list.innerHTML = `
+                <div class="col-span-full text-center py-20 bg-white rounded-lg border border-red-300">
+                    <p class="text-red-600 font-medium text-xl">Xatolik yuz berdi</p>
+                    <p class="text-gray-600 mt-2">Serverdan testlarni yuklab boʻlmadi.</p>
+                </div>
+            `;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadTests);
 </script>
 {% endblock %}
