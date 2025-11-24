@@ -9,19 +9,26 @@ import os
 
 
 # ==========================================================
-# KONFIGURATSIYA QISMI (PostgreSQL ga moslandi)
+# KONFIGURATSIYA QISMI (FAQAT PostgreSQL ga moslandi)
 # ==========================================================
 
 # 1. Renderdan keladigan DATABASE_URL ni olish
 database_url = os.environ.get('DATABASE_URL')
 
 # 2. Agar URL 'postgres://' bilan boshlansa, uni 'postgresql://' ga o'zgartirish
-# (Bu Flask-SQLAlchemy va psycopg2 talab qiladigan format)
 if database_url and database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
+# 🔥 MUHIM TEKSHIRUV: Agar DATABASE_URL topilmasa, Ilovani ishga tushirmaslik (Render uchun zarur)
+if not database_url:
+    # Bu yerda biz SQLite variantini butunlay olib tashladik
+    raise EnvironmentError("DATABASE_URL muhit o'zgaruvchisi topilmadi. PostgreSQL ulanish manzili majburiy.")
+
 app = Flask(__name__)
-app.config['SECRET_KEY']='42e9f7a1c3d8b5e0a6f4d2c8b1a9f3e7d4c1b8a5f2e6d3c7b0a8f9e6d5c2b9a4'
+app.config['SECRET_KEY'] = '42e9f7a1c3d8b5e0a6f4d2c8b1a9f3e7d4c1b8a5f2e6d3c7b0a8f9e6d5c2b9a4'
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
 ADMIN_USERNAME = "AdminTest"
 ADMIN_PASSWORD = "Salom1234"
