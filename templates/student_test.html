@@ -91,9 +91,18 @@
             
 
             // PDF
-            if (testData.pdf && testData.pdf.trim()) {
-                const src = testData.pdf.startsWith('data:') ? testData.pdf : 'data:application/pdf;base64,' + testData.pdf;
+            if (testData.pdf_link && testData.pdf_link.trim()) {
+                // YANGI usul: Google Drive preview linki
+                document.getElementById('student-pdf').src = testData.pdf_link;
+            } else if (testData.pdf && testData.pdf.trim()) {
+                // ESKI usul: base64 PDF (agar eski test bo‘lsa)
+                const src = testData.pdf.startsWith('data:') 
+                    ? testData.pdf 
+                    : 'data:application/pdf;base64,' + testData.pdf;
                 document.getElementById('student-pdf').src = src;
+            } else {
+                console.error("PDF topilmadi! Backenddan pdf_link yoki pdf kelmadi.");
+                document.getElementById('student-pdf').src = "about:blank";
             }
 
             // Navigatsiyani ikkala joyga ham yaratamiz
