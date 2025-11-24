@@ -24,13 +24,8 @@ app = Flask(__name__)
 app.config['SECRET_KEY']='42e9f7a1c3d8b5e0a6f4d2c8b1a9f3e7d4c1b8a5f2e6d3c7b0a8f9e6d5c2b9a4'
 db = SQLAlchemy(app)
 ADMIN_USERNAME = "AdminTest"
-ADMIN_PASSWORD = "Salom1234" 
+ADMIN_PASSWORD = "Salom1234"
 
-# ==========================================================
-# ... Qolgan kod, Modellar va Routerlar o'zgarishsiz davom etadi ...
-# ==========================================================
-
-# Token yaratish va deshifrlash uchun obyekt
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 def generate_test_token(test_id, code):
