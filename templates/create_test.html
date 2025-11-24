@@ -64,7 +64,15 @@
             
             <!-- PDF Viewer (Google Drive Preview) -->
             <div class="pdf col-span-1 lg:col-span-2 bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-200 h-[60vh] lg:h-full">
-                <iframe id="admin-pdf" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+                <iframe 
+                    id="admin-pdf" 
+                    class="w-full h-full" 
+                    frameborder="0" 
+                    allowfullscreen 
+                    allow="fullscreen; accelerometer; gyroscope; magnetometer"
+                    scrolling="yes"
+                    sandbox="allow-scripts allow-same-origin allow-popups">  <!-- 🔥 YANGI: Sandbox mobil zoom va script uchun -->
+                </iframe>
             </div>
             
             <!-- Javob belgilash paneli (o'zgarmaydi) -->
@@ -136,6 +144,7 @@
 
         // Link/ID ni tekshirish va ID ni ajratib olish
         let fileId = linkOrIdInput;
+        
         // Agar to'liq link kiritilgan bo'lsa, ID ni ajratib olamiz
         const match = linkOrIdInput.match(/\/d\/([a-zA-Z0-9_-]+)/);
         if (match && match[1]) {
@@ -153,7 +162,7 @@
         // Ma'lumotlarni saqlash
         currentTest = {
             name,
-            pdf_preview_link: pdfPreviewLink, // API chaqiruvisiz to'g'ridan-to'g'ri link yaratildi
+            pdf_preview_link: pdfPreviewLink,
             questions: qcount,
             variants: acount,
             answers: {}
