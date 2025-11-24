@@ -7,11 +7,11 @@
     <!-- Header -->
     <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
         <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-            <a href="{{ url_for('admin_dash') }}" class="text-gray-700 hover:text-gray-900 transition">
+            <a href="{{ url_for('admin_dash') }}" class="text-gray-700 hover:text-gray-900 transition hover:scale-105">
                 <i class="fa-solid fa-arrow-left text-2xl"></i>
             </a>
-            <h1 class="text-xl font-bold text-gray-800">
-                Natijalar: <span id="test-title" class="text-gray-600">Yuklanmoqda...</span>
+            <h1 class="text-xl font-bold text-gray-800 text-center">
+                Natijalar: <span id="test-title" class="text-indigo-600">Yuklanmoqda...</span>
             </h1>
             <div class="w-10"></div>
         </div>
@@ -21,62 +21,78 @@
 
         <!-- Yuklanish -->
         <div id="loading" class="text-center py-20">
-            <i class="fa-solid fa-spinner fa-spin text-4xl text-gray-500 mb-4"></i>
+            <i class="fa-solid fa-spinner fa-spin text-4xl text-indigo-500 mb-4"></i>
             <p class="text-gray-600">Natijalar yuklanmoqda...</p>
         </div>
 
         <!-- Asosiy kontent -->
         <div id="results-container" class="hidden space-y-6">
-
+            
             <!-- Statistika -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-                <div class="bg-white p-5 rounded-lg border border-gray-200">
+                <div class="bg-white p-5 rounded-xl shadow-md border border-gray-200">
                     <p class="text-sm text-gray-600">Jami talaba</p>
-                    <p class="text-2xl font-bold text-gray-800 mt-1" id="total-students">0</p>
+                    <p class="text-2xl font-extrabold text-indigo-600 mt-1" id="total-students">0</p>
                 </div>
-                <div class="bg-white p-5 rounded-lg border border-gray-200">
+                <div class="bg-white p-5 rounded-xl shadow-md border border-gray-200">
                     <p class="text-sm text-gray-600">Oʻrtacha ball</p>
-                    <p class="text-2xl font-bold text-gray-800 mt-1" id="avg-percentage">0%</p>
+                    <p class="text-2xl font-extrabold text-gray-800 mt-1" id="avg-percentage">0%</p>
                 </div>
-                <div class="bg-white p-5 rounded-lg border border-gray-200">
+                <div class="bg-white p-5 rounded-xl shadow-md border border-gray-200">
                     <p class="text-sm text-gray-600">Eng yuqori</p>
-                    <p class="text-2xl font-bold text-gray-800 mt-1" id="first-place">0%</p>
+                    <p class="text-2xl font-extrabold text-green-600 mt-1" id="first-place">0%</p>
                 </div>
-                <div class="bg-white p-5 rounded-lg border border-gray-200">
+                <div class="bg-white p-5 rounded-xl shadow-md border border-gray-200">
                     <p class="text-sm text-gray-600">Eng past</p>
-                    <p class="text-2xl font-bold text-gray-800 mt-1" id="last-place">0%</p>
+                    <p class="text-2xl font-extrabold text-red-600 mt-1" id="last-place">0%</p>
                 </div>
             </div>
 
-            <!-- Jadval -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <!-- Qidiruv maydoni -->
+            <div class="pt-2">
+                <input type="text" id="search-input" placeholder="Ism/Familya bo'yicha qidiruv..." 
+                       class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition"
+                       onkeyup="filterResults()">
+            </div>
+            
+            <!-- Jadval (natijalar bo'lmasa yashirinadi) -->
+            <div id="table-wrapper" class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
-                        <thead class="bg-gray-100 text-gray-700 text-sm uppercase tracking-wider">
+                        <thead class="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider">
                             <tr class="border-b border-gray-200">
-                                <th class="px-5 py-4 font-medium">Oʻrin</th>
-                                <th class="px-5 py-4 font-medium">Ism Familya</th>
-                                <th class="px-5 py-4 text-center font-medium hidden sm:table-cell">Savollar</th>
-                                <th class="px-5 py-4 text-center font-medium">Toʻgʻri</th>
-                                <th class="px-5 py-4 text-center font-medium">Xato</th>
-                                <th class="px-5 py-4 text-center font-medium">Ball</th>
-                                <th class="px-5 py-4 text-center font-medium hidden sm:table-cell">Sana</th>
+                                <th class="px-5 py-3 font-semibold">Oʻrin</th>
+                                <th class="px-5 py-3 font-semibold">Ism Familya</th>
+                                <th class="px-5 py-3 text-center font-semibold hidden sm:table-cell">Savollar</th>
+                                <th class="px-5 py-3 text-center font-semibold">Toʻgʻri</th>
+                                <th class="px-5 py-3 text-center font-semibold">Xato</th>
+                                <th class="px-5 py-3 text-center font-semibold">Ball</th>
+                                <th class="px-5 py-3 text-center font-semibold hidden sm:table-cell">Sana</th>
                             </tr>
                         </thead>
-                        <tbody id="results-table-body" class="text-gray-800">
+                        <tbody id="results-table-body" class="text-gray-800 divide-y divide-gray-100">
                             <!-- JS bilan toʻldiriladi -->
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Hech kim yoʻq boʻlsa -->
-            <div id="no-results" class="hidden text-center py-16 bg-white rounded-lg border-2 border-dashed border-gray-300">
-                <i class="fa-solid fa-user-graduate text-6xl text-gray-400 mb-4"></i>
-                <p class="text-xl font-medium text-gray-700">Hali hech kim testni ishlamagan</p>
-                <p class="text-gray-500 mt-2">Talabalar link orqali kirganda natijalar shu yerda paydo boʻladi</p>
+            <!-- Qidiruv bo'yicha natija topilmasa -->
+            <div id="no-match" class="hidden text-center py-16 bg-white rounded-lg border-2 border-dashed border-red-300">
+                <i class="fa-solid fa-magnifying-glass-minus text-6xl text-red-400 mb-4"></i>
+                <p class="text-xl font-medium text-gray-700">Qidiruv bo'yicha natija topilmadi</p>
+                <p class="text-gray-500 mt-2">Iltimos, ism/familyani tekshirib, boshqattan urinib ko'ring.</p>
             </div>
+
         </div>
+
+        <!-- Hali hech kim yoʻq boʻlsa (faqat initial yuklanishda) -->
+        <div id="no-results" class="hidden text-center py-20 bg-white rounded-xl shadow-md border-2 border-dashed border-indigo-300">
+            <i class="fa-solid fa-user-graduate text-6xl text-indigo-400 mb-4"></i>
+            <p class="text-2xl font-bold text-gray-800">Hali hech kim testni ishlamagan</p>
+            <p class="text-gray-500 mt-2">Talabalar testga kirib natijalarini topshirgandan so'ng, jadval shu yerda paydo boʻladi.</p>
+        </div>
+        
     </main>
 </div>
 {% endblock %}
@@ -84,87 +100,159 @@
 {% block scripts %}
 <script>
     const testId = {{ test_id }};
-
+    let globalResults = []; // Natijalarni saqlash uchun global o'zgaruvchi
+    
+    // Yordamchi funksiya: o'zbekcha sanani formatlash
     function formatUzbekDate(dateString) {
         const months = ['yanvar','fevral','mart','aprel','may','iyun','iyul','avgust','sentabr','oktabr','noyabr','dekabr'];
         const d = new Date(dateString);
+        // Date ob'ekti to'g'ri yaratilganini tekshirish
+        if (isNaN(d.getTime())) {
+            return dateString; // Agar noto'g'ri bo'lsa, xom matnni qaytarish
+        }
         const day = d.getDate();
         const month = months[d.getMonth()];
         const h = d.getHours().toString().padStart(2,'0');
         const m = d.getMinutes().toString().padStart(2,'0');
-        return `${day}-${month} ${h}:${m}`;
+        const y = d.getFullYear(); // Yilni ham qo'shish yaxshi
+        return `${day}-${month} ${y} ${h}:${m}`;
     }
 
+    // Yordamchi funksiya: Jadval satrlarini yaratish
+    function createResultRow(r, i, totalQuestions) {
+        const place = i + 1;
+        const displayName = r.name && r.name.trim() !== '' ? r.name.trim() : 'Ismi kiritilmagan';
+        
+        let bgColor = 'bg-red-600';
+        if (r.percentage >= 90) bgColor = 'bg-green-600';
+        else if (r.percentage >= 70) bgColor = 'bg-blue-600';
+        else if (r.percentage >= 50) bgColor = 'bg-yellow-600';
+
+        const row = document.createElement('tr');
+        row.className = 'border-b border-gray-100 hover:bg-indigo-50 transition';
+        row.setAttribute('data-name', displayName.toLowerCase()); // Qidiruv uchun
+
+        row.innerHTML = `
+            <td class="px-5 py-4 font-semibold text-gray-900">${place}</td>
+            <td class="px-5 py-4 font-medium text-gray-900">${displayName}</td>
+            <td class="px-5 py-4 text-center text-gray-600 hidden sm:table-cell">${totalQuestions}</td>
+            <td class="px-5 py-4 text-center font-medium text-green-600">${r.correct}</td>
+            <td class="px-5 py-4 text-center font-medium text-red-600">${r.wrong}</td>
+            <td class="px-5 py-4 text-center">
+                <span class="inline-block px-4 py-1.5 rounded-full text-white font-bold text-sm ${bgColor} shadow-md">
+                    ${r.percentage}%
+                </span>
+            </td>
+            <td class="px-5 py-4 text-center text-sm text-gray-500 hidden sm:table-cell">
+                ${formatUzbekDate(r.date)}
+            </td>
+        `;
+        return row;
+    }
+
+    // Funksiya: Natijalarni yuklash va render qilish
     async function loadAdminResults() {
         const loading = document.getElementById('loading');
         const container = document.getElementById('results-container');
-        const tableBody = document.getElementById('results-table-body');
         const noResults = document.getElementById('no-results');
+        const noMatch = document.getElementById('no-match');
+        const tableWrapper = document.getElementById('table-wrapper');
         const testTitle = document.getElementById('test-title');
+        
+        // Boshqa barcha xabar va konteynerlarni yashirish
+        container.classList.add('hidden');
+        noResults.classList.add('hidden');
+        noMatch.classList.add('hidden');
+        loading.classList.remove('hidden');
 
         try {
+            // API chaqiruvi (Exponential Backoff bilan ishlashi kerak, ammo soddalik uchun to'g'ridan-to'g'ri chaqiruv)
             const res = await fetch(`/api/results/all/${testId}`);
             if (!res.ok) throw new Error("Ma'lumot yuklanmadi");
             const data = await res.json();
 
-            testTitle.textContent = data.test_name || "Test";
-
+            testTitle.textContent = data.test_name || "Test Natijalari";
+            
+            // 1. Hech qanday natija yo'q
             if (data.results.length === 0) {
                 loading.classList.add('hidden');
                 noResults.classList.remove('hidden');
                 return;
             }
 
-            // Tartiblash
-            data.results.sort((a, b) => b.percentage - a.percentage);
+            // 2. Natijalar bor
+            globalResults = data.results;
+            
+            // Tartiblash (Ball bo'yicha kamayish tartibida)
+            globalResults.sort((a, b) => b.percentage - a.percentage);
 
             // Statistika
-            document.getElementById('total-students').textContent = data.results.length;
-            const avg = data.results.reduce((s, r) => s + r.percentage, 0) / data.results.length;
+            document.getElementById('total-students').textContent = globalResults.length;
+            const totalPercentage = globalResults.reduce((s, r) => s + r.percentage, 0);
+            const avg = totalPercentage / globalResults.length;
             document.getElementById('avg-percentage').textContent = avg.toFixed(1) + '%';
-            document.getElementById('first-place').textContent = data.results[0].percentage + '%';
-            document.getElementById('last-place').textContent = data.results[data.results.length-1].percentage + '%';
+            document.getElementById('first-place').textContent = globalResults[0].percentage + '%';
+            document.getElementById('last-place').textContent = globalResults[globalResults.length-1].percentage + '%';
 
-            tableBody.innerHTML = '';
-
-            data.results.forEach((r, i) => {
-                const place = i + 1;
-
-                // Ism toʻgʻri chiqadi, agar boʻsh boʻlsa "Ismi kiritilmagan"
-                const displayName = r.name && r.name.trim() !== '' ? r.name.trim() : 'Ismi kiritilmagan';
-
-                const row = document.createElement('tr');
-                row.className = 'border-b border-gray-200 hover:bg-gray-50 transition';
-
-                row.innerHTML = `
-                    <td class="px-5 py-4 font-semibold text-gray-900">${place}</td>
-                    <td class="px-5 py-4 font-medium text-gray-900">${displayName}</td>
-                    <td class="px-5 py-4 text-center text-gray-600 hidden sm:table-cell">${data.questions_count}</td>
-                    <td class="px-5 py-4 text-center font-medium text-green-600">${r.correct}</td>
-                    <td class="px-5 py-4 text-center font-medium text-red-600">${r.wrong}</td>
-                    <td class="px-5 py-4 text-center">
-                        <span class="inline-block px-4 py-2 rounded-full text-white font-bold text-sm
-                            ${r.percentage >= 90 ? 'bg-green-600' : 
-                              r.percentage >= 70 ? 'bg-blue-600' : 
-                              r.percentage >= 50 ? 'bg-yellow-600' : 'bg-red-600'}">
-                            ${r.percentage}%
-                        </span>
-                    </td>
-                    <td class="px-5 py-4 text-center text-sm text-gray-500 hidden sm:table-cell">
-                        ${formatUzbekDate(r.date)}
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
+            // Jadvalni render qilish
+            renderResultsTable(globalResults, data.questions_count);
 
             loading.classList.add('hidden');
             container.classList.remove('hidden');
+            tableWrapper.classList.remove('hidden');
 
         } catch (err) {
-            loading.innerHTML = `<p class="text-red-600 font-medium text-center">Xatolik: ${err.message}</p>`;
+            console.error("Natijalar yuklashda xatolik:", err);
+            loading.innerHTML = `<p class="text-red-600 font-medium text-center">Xatolik: Natijalar yuklanmadi. (${err.message})</p>`;
+        }
+    }
+    
+    // Funksiya: Jadvalni berilgan natijalar massivi bo'yicha to'ldirish
+    function renderResultsTable(resultsArray, totalQuestions) {
+        const tableBody = document.getElementById('results-table-body');
+        tableBody.innerHTML = '';
+        
+        resultsArray.forEach((r, i) => {
+            const row = createResultRow(r, i, totalQuestions);
+            tableBody.appendChild(row);
+        });
+    }
+
+    // Funksiya: Qidiruvni amalga oshirish (DOM manipulyatsiyasi)
+    function filterResults() {
+        const input = document.getElementById('search-input');
+        const filter = input.value.toLowerCase().trim();
+        const tableBody = document.getElementById('results-table-body');
+        const rows = tableBody.getElementsByTagName('tr');
+        const noMatch = document.getElementById('no-match');
+        const tableWrapper = document.getElementById('table-wrapper');
+        
+        let matchFound = false;
+
+        for (let i = 0; i < rows.length; i++) {
+            const nameCell = rows[i].getElementsByTagName('td')[1]; // Ism Familya ustuni
+            if (nameCell) {
+                const name = nameCell.textContent || nameCell.innerText;
+                if (name.toLowerCase().indexOf(filter) > -1) {
+                    rows[i].style.display = ""; // Ko'rsatish
+                    matchFound = true;
+                } else {
+                    rows[i].style.display = "none"; // Yashirish
+                }
+            }
+        }
+        
+        // Qidiruv natijalarini ko'rsatish/yashirish
+        if (filter === '' || matchFound) {
+            noMatch.classList.add('hidden');
+            tableWrapper.classList.remove('hidden');
+        } else {
+            noMatch.classList.remove('hidden');
+            tableWrapper.classList.add('hidden');
         }
     }
 
     document.addEventListener('DOMContentLoaded', loadAdminResults);
 </script>
+<script src="https://kit.fontawesome.com/4a2613c597.js" crossorigin="anonymous"></script>
 {% endblock %}
