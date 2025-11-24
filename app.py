@@ -4,21 +4,38 @@ from flask_sqlalchemy import SQLAlchemy
 import random
 from sqlalchemy import exc
 from datetime import datetime
-# 🔥 YANGI IMPORTLAR
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
-from itsdangerous import URLSafeTimedSerializer
+# 🔥 MUHIM: os import qiling
+import os 
 
+
+# ==========================================================
+# KONFIGURATSIYA QISMI (PostgreSQL ga moslandi)
+# ==========================================================
+
+# 1. Renderdan keladigan DATABASE_URL ni olish
+database_url = os.environ.get('DATABASE_URL')
+
+# 2. Agar URL 'postgres://' bilan boshlansa, uni 'postgresql://' ga o'zgartirish
+# (Bu Flask-SQLAlchemy va psycopg2 talab qiladigan format)
+if database_url and database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'sizning_juda_maxfiy_va_noyob_kalitingiz_bu_yerda' 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SECRET_KEY'] = 'sizning_juda_maxfiy_va_noyob_kalitingiz_bu_yerda' 
+
+# 🔥 MUHIM O'ZGARTIRISH: Agar database_url mavjud bo'lsa (Renderda), uni ishlatish.
+# Aks holda (lokalda), 'sqlite:///database.db' dan foydalanish.
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
 
 ADMIN_USERNAME = "AdminTest"
-ADMIN_PASSWORD = "Salom1234" 
+ADMIN_PASSWORD = "Salom1234" 
+
 # ==========================================================
-# TOKEN UCHUN YORDAMCHI FUNKSIYALAR
+# ... Qolgan kod, Modellar va Routerlar o'zgarishsiz davom etadi ...
 # ==========================================================
 
 # Token yaratish va deshifrlash uchun obyekt
