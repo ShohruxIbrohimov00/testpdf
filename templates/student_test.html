@@ -17,12 +17,14 @@
 
             <!-- PDF -->
             <div class="pdf col-span-1 lg:col-span-2 bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-200 h-[70vh] lg:h-full">
-                <iframe 
-                    id="student-pdf" 
-                    class="w-full h-full" 
-                    frameborder="0" 
+                <iframe
+                    id="student-pdf"
+                    class="w-full h-full"
+                    frameborder="0"
                     allowfullscreen
-                    allow="fullscreen">
+                    allow="fullscreen"
+                    scrolling="yes"
+                    style="touch-action: pan-x pan-y pinch-zoom;">
                 </iframe>
             </div>
 
@@ -92,17 +94,16 @@
 
             // PDF
             if (testData.pdf_link && testData.pdf_link.trim()) {
-                // YANGI usul: Google Drive preview linki
-                document.getElementById('student-pdf').src = testData.pdf_link;
-            } else if (testData.pdf && testData.pdf.trim()) {
-                // ESKI usul: base64 PDF (agar eski test bo‘lsa)
-                const src = testData.pdf.startsWith('data:') 
-                    ? testData.pdf 
-                    : 'data:application/pdf;base64,' + testData.pdf;
-                document.getElementById('student-pdf').src = src;
-            } else {
-                console.error("PDF topilmadi! Backenddan pdf_link yoki pdf kelmadi.");
-                document.getElementById('student-pdf').src = "about:blank";
+                let safeLink = testData.pdf_link.trim();
+            
+                // 1. Faqat /preview bo‘lishi kerak (embed emas!)
+                safeLink = safeLink.replace('/embed', '/preview');
+            
+                // 2. rm=minimal qo‘shish (download ni o‘chiradi)
+                if (!safeLink.includes('rm=minimal')) {
+                    safeLink += (safeLink.includes('?') ? '&' : '?') + 'rm=minimal';
+                }
+                document.getElementById('student-pdf').src = safeLink;
             }
 
             // Navigatsiyani ikkala joyga ham yaratamiz
