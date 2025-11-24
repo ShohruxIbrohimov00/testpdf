@@ -22,9 +22,7 @@ if database_url and database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'sizning_juda_maxfiy_va_noyob_kalitingiz_bu_yerda' 
-
-
+app.config['SECRET_KEY'] = '42e9f7a1c3d8b5e0a6f4d2c8b1a9f3e7d4c1b8a5f2e6d3c7b0a8f9e6d5c2b9a4' 
 
 db = SQLAlchemy(app)
 
