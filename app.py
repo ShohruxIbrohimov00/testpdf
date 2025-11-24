@@ -5,7 +5,6 @@ import random
 from sqlalchemy import exc
 from datetime import datetime
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
-# 🔥 MUHIM: os import qiling
 import os 
 
 
@@ -22,10 +21,8 @@ if database_url and database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '42e9f7a1c3d8b5e0a6f4d2c8b1a9f3e7d4c1b8a5f2e6d3c7b0a8f9e6d5c2b9a4' 
-
+app.config['SECRET_KEY']='42e9f7a1c3d8b5e0a6f4d2c8b1a9f3e7d4c1b8a5f2e6d3c7b0a8f9e6d5c2b9a4'
 db = SQLAlchemy(app)
-
 ADMIN_USERNAME = "AdminTest"
 ADMIN_PASSWORD = "Salom1234" 
 
