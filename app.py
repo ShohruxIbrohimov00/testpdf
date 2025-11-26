@@ -516,6 +516,8 @@ def student_result_page(test_id):
 def admin_results_page(test_id):
     return render_template('admin_results.html', test_id=test_id)
 
+# app.py faylida /api/test/delete/<int:test_id> route'ini quyidagicha o'zgartiring:
+
 @app.route('/api/test/delete/<int:test_id>', methods=['DELETE'])
 def delete_test(test_id):
     try:
@@ -528,17 +530,19 @@ def delete_test(test_id):
                 'message': f'ID={test_id} bo‘lgan test topilmadi.'
             }), 404
 
-        # 2. Ushbu testga bog'liq barcha NATIJALARNI o'chirish (Sizda natijalar test ichida JSON da saqlanadi)
-        # SQLAlchemy dan foydalanib, results_json ustunini o'chirib o'tirish shart emas, 
-        # chunki biz to'g'ridan-to'g'ri butun Test obyektini o'chiramiz.
-        # Agar natijalar alohida jadvalda (Result(db.Model) da) bo'lganda, avval natijalarni, keyin Testni o'chirish talab qilinardi.
+        # 🔥 MUAMMONI HAL QILUVCHI QISM:
+        # Testni o'chirishdan avval, unga bog'liq barcha StudentSession (ro'yxatdan o'tgan talabalar) yozuvlarini o'chiramiz.
+        # Bu, PostgreSQL bazasidagi (Foreign Key) bog'lanish cheklovini (IntegrityError) oldini oladi.
+        StudentSession.query.filter_by(test_id=test_id).delete()
         
-        # 3. Testning o'zini o'chirish (DELETE)
+        # 2. Endi testning o'zini o'chirish
         test_name = test_to_delete.name
         db.session.delete(test_to_delete)
+        
+        # 3. Amaliyotni yakunlash
         db.session.commit()
         
-        # 4. Amaliyot muvaffaqiyatli bo'lsa, status 200 qaytarish
+        # 4. Muvaffaqiyatli javob
         return jsonify({
             'status': 'success', 
             'message': f'"{test_name}" nomli test (ID: {test_id}) muvaffaqiyatli o‘chirildi.'
@@ -546,14 +550,15 @@ def delete_test(test_id):
     
     except exc.SQLAlchemyError as e:
         db.session.rollback()
-        # Baza bilan bog'liq xato yuz berganda
+        # Baza xatolarini qaytarish
         return jsonify({
             'status': 'error', 
-            'message': f'Testni o‘chirishda baza xatosi yuz berdi: {str(e)}'
+            'message': f'Testni o‘chirishda baza xatosi yuz berdi. (DB Rollback): {str(e)}'
         }), 500
         
     except Exception as e:
-        # Boshqa kutilmagan xatolar
+        db.session.rollback()
+        # Boshqa xatolar
         return jsonify({
             'status': 'error', 
             'message': f'Testni o‘chirishda kutilmagan xato: {str(e)}'
